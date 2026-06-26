@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="VerstigeTech — Live trading analytics & strategy performance for 9-engine algorithmic fleet" />
+<title>VerstigeTech — Live Trading Intelligence</title>
+<link rel="stylesheet" href="assets/styles.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── HERO ─────────────────────────────────────────────── -->
+  <section class="page-hero">
+    <div class="container">
+      <span class="eyebrow">LIVE SIGNAL INTELLIGENCE</span>
+      <h1>
+        Nine Engines. <span class="gradient-text">One Mission.</span><br/>
+        Live Performance, Decoded.
+      </h1>
+      <p>
+        VerstigeTech aggregates every signal, every fill, every pip across
+        our 9-engine trading fleet — and surfaces it in a single, beautiful,
+        glass-dark analytics experience.
+      </p>
+      <div class="flex items-center justify-center gap-3 mt-8">
+        <a href="dashboard.html" class="btn btn-primary">View Live Dashboard →</a>
+        <a href="strategies.html" class="btn btn-ghost">Explore Strategies</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TOP KPI STRIP ────────────────────────────────────── -->
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Net Pips</div>
+          <div class="kpi-value positive" id="kpi-pips">—</div>
+          <div class="kpi-sub" id="kpi-pips-sub">across all engines</div>
+        </div>
+        <div class="kpi emerald">
+          <div class="kpi-label">Net P&amp;L</div>
+          <div class="kpi-value" id="kpi-usd">—</div>
+          <div class="kpi-sub">$1,000 acct · 1% risk</div>
+        </div>
+        <div class="kpi purple">
+          <div class="kpi-label">Win Rate</div>
+          <div class="kpi-value" id="kpi-wr">—</div>
+          <div class="kpi-sub" id="kpi-wr-sub">— wins / — losses</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label">Open Trades</div>
+          <div class="kpi-value gold" id="kpi-open">—</div>
+          <div class="kpi-sub">live across the fleet</div>
+        </div>
+        <div class="kpi pink">
+          <div class="kpi-label">Signals Fired</div>
+          <div class="kpi-value cyan" id="kpi-signals">—</div>
+          <div class="kpi-sub">all-time across 9 engines</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── ENGINE GRID ──────────────────────────────────────── -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="eyebrow gold">ENGINE FLEET</span>
+        <h2 class="section-title">
+          Nine strategies, <span class="grad-cyan">one P&amp;L.</span>
+        </h2>
+        <p class="section-sub">
+          Each engine runs its own scanning, scoring, and Telegram delivery
+          pipeline. Click any card for its full performance history.
+        </p>
+      </div>
+      <div class="engine-grid" id="engine-grid"></div>
+    </div>
+  </section>
+
+  <!-- ─── LIVE P&L CHART ───────────────────────────────────── -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="eyebrow purple">DAILY P&amp;L</span>
+        <h2 class="section-title">The last <span class="grad-gold">14 days</span> of pips.</h2>
+        <p class="section-sub">Stacked by engine. Gold leader: <b id="leader-name">—</b></p>
+      </div>
+      <div class="glass" style="padding:24px">
+        <canvas id="chart-daily" height="120"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURED: STRATEGY CATALOG ───────────────────────── -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="eyebrow green">THE CATALOG</span>
+        <h2 class="section-title">Per-strategy deep-dive.</h2>
+        <p class="section-sub">
+          Entry logic, exit logic, regime filters, and live performance
+          metrics for every engine — all in one place.
+        </p>
+      </div>
+      <div class="glass" style="padding:48px;text-align:center">
+        <p style="color:var(--muted);max-width:520px;margin:0 auto 24px">
+          Every engine runs a unique combination of smart-money concepts,
+          volatility filters, and momentum triggers. The full Strategy Catalog
+          lives on the next page.
+        </p>
+        <a href="strategies.html" class="btn btn-primary">Open the Strategy Catalog →</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+initPage('overview');
+
+let DAILY_CHART = null;
+
+function render(){
+  if(!DATA) return;
+
+  // KPIs
+  const t = DATA.totals;
+  document.getElementById('kpi-pips').textContent = fmtPips(t.net_pips);
+  document.getElementById('kpi-pips').className = 'kpi-value ' + (t.net_pips>=0?'positive':'negative');
+  document.getElementById('kpi-pips-sub').textContent = `${fmtNum(t.total_closed)} closed trades`;
+
+  document.getElementById('kpi-usd').textContent = fmtUSD(t.net_dollars);
+  document.getElementById('kpi-usd').className = 'kpi-value ' + (t.net_dollars>=0?'positive':'negative');
+
+  document.getElementById('kpi-wr').textContent = fmtPct(t.win_rate);
+  document.getElementById('kpi-wr').className = 'kpi-value ' + (t.win_rate>=50?'positive':'negative');
+  document.getElementById('kpi-wr-sub').textContent = `${fmtNum(t.total_wins)}W / ${fmtNum(t.total_losses)}L`;
+
+  document.getElementById('kpi-open').textContent = fmtNum(t.total_open);
+
+  document.getElementById('kpi-signals').textContent = fmtNum(t.total_signals);
+
+  // Leader
+  const leader = [...DATA.engines].sort((a,b)=>b.net_pips-a.net_pips)[0];
+  document.getElementById('leader-name').textContent = `${leader.name} (${fmtPips(leader.net_pips)} pips)`;
+
+  // Engine grid
+  const grid = document.getElementById('engine-grid');
+  grid.innerHTML = ENGINES.map(([name,sym,label,color])=>{
+    const e = DATA.engines.find(x=>x.name===name) || {};
+    const ph = (DATA.process_health||{})[name] || {};
+    const pipClass = e.net_pips > 0 ? 'positive' : e.net_pips < 0 ? 'negative' : 'neutral';
+    const usdClass = e.net_dollars > 0 ? 'positive' : e.net_dollars < 0 ? 'negative' : 'neutral';
+    const proc = ph.running;
+    const live = (e.open_trades||0) > 0;
+    let badge='idle', badgeText='IDLE';
+    if(!proc){badge='down';badgeText='DOWN'}
+    else if(live){badge='live';badgeText='LIVE'}
+    return `<a href="strategies.html#${name}" class="engine-card" data-engine="${name}">
+      <div class="engine-card-head">
+        <div class="engine-name">${name}</div>
+        <div class="engine-symbol">${sym}</div>
+      </div>
+      <div class="engine-strategy">${label}</div>
+      <div class="engine-stats">
+        <div class="engine-stat">
+          <div class="v ${pipClass}">${fmtPips(e.net_pips||0)}</div>
+          <div class="l">Net Pips</div>
+        </div>
+        <div class="engine-stat">
+          <div class="v ${usdClass}">${fmtUSD(e.net_dollars||0)}</div>
+          <div class="l">P&amp;L ($)</div>
+        </div>
+        <div class="engine-stat">
+          <div class="v neutral">${fmtPct(e.win_rate||0)}</div>
+          <div class="l">WR (${e.closed_trades||0})</div>
+        </div>
+      </div>
+      <div class="engine-foot">
+        <span>${fmtNum(e.total_signals||0)} sigs · ${e.open_trades||0} open</span>
+        <span class="engine-badge ${badge}">${badgeText}</span>
+      </div>
+    </a>`;
+  }).join('');
+
+  // Daily chart
+  renderDailyChart();
+}
+
+function renderDailyChart(){
+  const ctx = document.getElementById('chart-daily').getContext('2d');
+  if(DAILY_CHART) DAILY_CHART.destroy();
+  const days = Object.keys(DATA.daily_pnl || {}).sort();
+  if(!days.length){
+    ctx.canvas.parentElement.innerHTML += '<div style="padding:40px;text-align:center;color:var(--dim)">No closed trades in last 14 days</div>';
+    return;
+  }
+  const datasets = ENGINES.map(([name,sym,label,color])=>({
+    label:name,
+    data:days.map(d => (DATA.daily_pnl[d] && DATA.daily_pnl[d][name]) ? DATA.daily_pnl[d][name].pips : 0),
+    backgroundColor:color,
+    borderColor:color,
+    stack:'pips',
+  }));
+  DAILY_CHART = new Chart(ctx,{
+    type:'bar',
+    data:{labels:days, datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:11},boxWidth:12,padding:12}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)} pips`}}
+      },
+      scales:{
+        x:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
+        y:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
+      }
+    }
+  });
+}
+
+window.onDataReady = render;
+</script>
+
+</body>
+</html>

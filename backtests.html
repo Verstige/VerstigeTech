@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Backtests · VerstigeTech</title>
+<link rel="stylesheet" href="assets/styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .window-tabs{display:flex;gap:4px;padding:4px;background:rgba(0,0,0,0.2);border-radius:10px;width:fit-content}
+  .window-tab{padding:8px 18px;border-radius:8px;font-family:var(--font-mono);font-size:12px;cursor:pointer;color:var(--muted);border:1px solid transparent;transition:all 0.15s ease;font-weight:600;letter-spacing:0.05em}
+  .window-tab:hover{color:var(--text)}
+  .window-tab.active{background:var(--panel-2);color:var(--cyan);border-color:var(--border-cyan)}
+  .caveat{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;font-family:var(--font-mono);font-size:11px;color:var(--gold);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="page-hero" style="padding:60px 0 30px">
+    <div class="container">
+      <span class="eyebrow green">BACKTESTS</span>
+      <h1>Historical <span class="gradient-text">edge, proven.</span></h1>
+      <p>7d / 30d / 60d / 90d performance across the fleet. All windows use 5-minute candle data (except 90d which uses daily due to Yahoo Finance API limits).</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+
+      <div class="caveat">
+        ⚠ <strong>Honest caveats</strong> — (1) Pip units differ by symbol (XAU=$/oz, US30=pts, BTC=$, EURUSD=pips). (2) Backtest uses simplified entry model (swing pivots + EMA) vs live (multi-factor scoring). (3) 90d uses daily candles so signal count is much lower (98 vs 2,171). Real WR is best read at 30d/60d windows.
+      </div>
+
+      <!-- Window tabs -->
+      <div class="window-tabs mb-8" id="window-tabs">
+        <div class="window-tab active" data-window="7d">7 DAYS</div>
+        <div class="window-tab" data-window="30d">30 DAYS</div>
+        <div class="window-tab" data-window="60d">60 DAYS</div>
+        <div class="window-tab" data-window="90d">90 DAYS</div>
+      </div>
+
+      <!-- KPI summary -->
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Signals</div><div class="kpi-value" id="b-signals">—</div></div>
+        <div class="kpi emerald"><div class="kpi-label">Win Rate</div><div class="kpi-value positive" id="b-wr">—</div><div class="kpi-sub" id="b-wl">—</div></div>
+        <div class="kpi gold"><div class="kpi-label">Total Pips</div><div class="kpi-value gold" id="b-pips">—</div></div>
+        <div class="kpi purple"><div class="kpi-label">Avg Pips / Sig</div><div class="kpi-value" id="b-avg">—</div></div>
+        <div class="kpi pink"><div class="kpi-label">Closed</div><div class="kpi-value" id="b-closed">—</div></div>
+      </div>
+
+      <!-- Chart -->
+      <div class="glass" style="padding:24px;margin-bottom:24px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Net Pips by Engine</div>
+        <canvas id="chart-backtest" height="100"></canvas>
+      </div>
+
+      <!-- Table -->
+      <div class="glass" style="padding:24px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">Per-Engine Breakdown — <span id="b-window-label">7 days</span></div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Rank</th><th>Engine</th><th>Symbol</th>
+              <th class="num">Signals</th><th class="num">Wins</th>
+              <th class="num">Partials</th><th class="num">Losses</th>
+              <th class="num">WR</th>
+              <th class="num">Net Pips</th>
+              <th class="num">Avg / Sig</th>
+            </tr></thead>
+            <tbody id="backtest-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+let CURRENT = '7d';
+let BT_DATA = null;
+let BT_CHART = null;
+
+async function loadWindow(w){
+  CURRENT = w;
+  document.querySelectorAll('.window-tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.window===w);
+  });
+  const r = await fetch(`data/backtests/${w}.json?t=${Date.now()}`);
+  BT_DATA = await r.json();
+  render();
+}
+
+function render(){
+  if(!BT_DATA) return;
+
+  // KPIs
+  const t = BT_DATA.totals;
+  document.getElementById('b-signals').textContent = fmtNum(t.signals);
+  document.getElementById('b-wr').textContent = fmtPct(t.wr);
+  document.getElementById('b-wr').className = 'kpi-value ' + (t.wr>=50?'positive':'negative');
+  document.getElementById('b-wl').textContent = `${fmtNum(t.wins)}W · ${fmtNum(t.losses)}L`;
+  document.getElementById('b-pips').textContent = fmtPips(t.total_pips);
+  document.getElementById('b-pips').className = 'kpi-value ' + (t.total_pips>=0?'positive':'negative') + ' gold';
+  document.getElementById('b-avg').textContent = fmtPips(t.total_pips / Math.max(1,t.signals));
+  document.getElementById('b-closed').textContent = fmtNum(t.closed);
+  document.getElementById('b-window-label').textContent = BT_DATA.window + ' days';
+
+  // Chart
+  const ctx = document.getElementById('chart-backtest').getContext('2d');
+  if(BT_CHART) BT_CHART.destroy();
+  const ranked = [...BT_DATA.engines].sort((a,b)=>b.total_pips-a.total_pips);
+  BT_CHART = new Chart(ctx,{type:'bar',
+    data:{labels:ranked.map(e=>e.name),datasets:[{
+      data:ranked.map(e=>e.total_pips),
+      backgroundColor:ranked.map(e=>e.total_pips>=0?'#10b981':'#ef4444'),
+      borderRadius:6,
+    }]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.x)+' pips'}}},
+      scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:11}},grid:{display:false}}}}});
+
+  // Table
+  const tb = document.getElementById('backtest-tbody');
+  tb.innerHTML = ranked.map((e,i)=>{
+    const eng = ENGINES.find(x=>x[0]===e.name);
+    const color = eng?eng[3]:'#888';
+    return `<tr>
+      <td><span style="color:var(--dim);font-weight:700">#${i+1}</span></td>
+      <td><span style="color:${color};font-weight:600">${e.name}</span></td>
+      <td class="muted small">${e.symbol}</td>
+      <td class="num">${fmtNum(e.signals)}</td>
+      <td class="num positive">${e.wins}</td>
+      <td class="num muted">${e.partials||0}</td>
+      <td class="num negative">${e.losses}</td>
+      <td class="num">${fmtPct(e.wr)}</td>
+      <td class="num ${e.total_pips>0?'positive':'negative'}">${fmtPips(e.total_pips)}</td>
+      <td class="num muted">${fmtPips(e.avg_pips)}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.addEventListener('click', e=>{
+  const tab = e.target.closest('.window-tab');
+  if(tab) loadWindow(tab.dataset.window);
+});
+
+initPage('backtests');
+loadWindow('7d');
+</script>
+
+</body>
+</html>

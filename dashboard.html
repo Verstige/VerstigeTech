@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="refresh" content="30" />
+<title>Live Dashboard · VerstigeTech</title>
+<link rel="stylesheet" href="assets/styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  /* Dashboard-specific overrides */
+  .dash-layout{display:grid;grid-template-columns:280px 1fr;gap:24px;padding:24px 0}
+  @media(max-width:1100px){.dash-layout{grid-template-columns:1fr}}
+  .dash-side{display:flex;flex-direction:column;gap:12px;position:sticky;top:80px;align-self:start;max-height:calc(100vh - 100px);overflow-y:auto}
+  .dash-main{display:flex;flex-direction:column;gap:24px}
+  .filter-bar{display:flex;align-items:center;gap:8px;padding:14px 20px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px}
+  .filter-bar .label{font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase}
+  .filter-active{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:100px;background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.3);color:var(--cyan);font-family:var(--font-mono);font-size:11px;letter-spacing:0.05em;font-weight:600}
+  .filter-active button{background:none;border:none;color:var(--cyan);cursor:pointer;font-size:14px;line-height:1;padding:0}
+  .side-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+  .side-card-title{font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px}
+  .engine-row{
+    display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;
+    transition:all 0.15s ease;border:1px solid transparent;font-family:var(--font-mono);font-size:12px;
+  }
+  .engine-row:hover{background:rgba(255,255,255,0.03)}
+  .engine-row.filtered{background:rgba(0,212,255,0.08);border-color:rgba(0,212,255,0.3)}
+  .engine-row.dimmed{opacity:0.4}
+  .engine-row .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .engine-row .name{flex:1;color:var(--text)}
+  .engine-row .meta{font-size:10px;color:var(--dim)}
+  .engine-row .pid{font-size:9px;color:var(--dim);background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px;margin-left:4px}
+  .engine-row .pid.down{background:rgba(239,68,68,0.15);color:var(--red-2)}
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
+  .open-list{display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto;padding-right:8px}
+  .open-item{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+  .open-item.filtered{border-color:var(--cyan);background:rgba(0,212,255,0.04)}
+  .open-item.dimmed{opacity:0.35}
+  .open-engine{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.05em}
+  .open-detail{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+  .open-detail strong{color:var(--text);font-weight:600}
+  .open-meta{font-family:var(--font-mono);font-size:10px;color:var(--dim);text-align:right}
+  .tg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .tg-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+  .tg-card.filtered{border-color:var(--cyan)}
+  .tg-card.dimmed{opacity:0.35}
+  .tg-card .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .tg-card .name{font-family:var(--font-mono);font-weight:700;font-size:13px}
+  .tg-card .channel{font-family:var(--font-mono);font-size:10px;color:var(--dim);background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:4px}
+  .tg-row{display:flex;justify-content:space-between;padding:5px 0;font-family:var(--font-mono);font-size:11px;border-bottom:1px dashed var(--border)}
+  .tg-row .label{color:var(--dim);text-transform:uppercase;letter-spacing:0.1em;font-size:9px}
+  .tg-row .value{color:var(--text);font-weight:600}
+  .tg-rate{display:inline-block;padding:3px 10px;border-radius:100px;font-family:var(--font-mono);font-size:10px;font-weight:600}
+  .tg-rate.high{background:rgba(16,185,129,0.15);color:var(--emerald-2)}
+  .tg-rate.mid{background:rgba(245,158,11,0.15);color:var(--gold)}
+  .tg-rate.low{background:rgba(239,68,68,0.15);color:var(--red-2)}
+  .tg-rate.none{background:rgba(100,116,139,0.15);color:var(--dim)}
+  .feed-table{font-family:var(--font-mono);font-size:12px}
+  .pill-row{display:flex;align-items:center;gap:4px;justify-content:flex-end}
+  .ts-h{margin-top:8px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <section style="padding:40px 0 0">
+    <div class="container">
+      <span class="eyebrow">LIVE</span>
+      <h1 style="font-size:clamp(28px,4vw,44px);font-weight:700;margin:12px 0 8px;letter-spacing:-0.02em">
+        Live <span class="gradient-text">Trading Dashboard</span>
+      </h1>
+      <p class="ts-h">Click any engine to filter everything. Click again to clear.</p>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="dash-layout">
+
+      <!-- Sidebar -->
+      <aside class="dash-side">
+        <div class="side-card">
+          <div class="side-card-title">Filter by engine</div>
+          <div id="engine-list"></div>
+        </div>
+        <div class="side-card">
+          <div class="side-card-title">Process Status</div>
+          <div id="process-status" style="font-family:var(--font-mono);font-size:12px;color:var(--muted);line-height:1.6"></div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <div class="dash-main">
+
+        <!-- Filter bar -->
+        <div class="filter-bar" id="filter-bar">
+          <span class="label">Showing:</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text)" id="filter-state">All 9 engines</span>
+        </div>
+
+        <!-- KPI strip -->
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">Net Pips</div><div class="kpi-value" id="kpi-pips">—</div><div class="kpi-sub" id="kpi-pips-sub">—</div></div>
+          <div class="kpi emerald"><div class="kpi-label">Net P&amp;L</div><div class="kpi-value" id="kpi-usd">—</div><div class="kpi-sub">$1k acct · 1% risk</div></div>
+          <div class="kpi purple"><div class="kpi-label">Win Rate</div><div class="kpi-value" id="kpi-wr">—</div><div class="kpi-sub" id="kpi-wr-sub">—</div></div>
+          <div class="kpi gold"><div class="kpi-label">Open Trades</div><div class="kpi-value gold" id="kpi-open">—</div><div class="kpi-sub" id="kpi-open-sub">—</div></div>
+          <div class="kpi pink"><div class="kpi-label">Signals</div><div class="kpi-value cyan" id="kpi-signals">—</div><div class="kpi-sub" id="kpi-engines">9 engines</div></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="dash-grid">
+          <div class="glass" style="padding:20px">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Daily P&amp;L · Last 14d</div>
+            <canvas id="chart-daily" height="160"></canvas>
+          </div>
+          <div class="glass" style="padding:20px">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Ranking · By Net Pips</div>
+            <canvas id="chart-rank" height="160"></canvas>
+          </div>
+        </div>
+
+        <!-- Open trades -->
+        <div class="glass" style="padding:24px">
+          <div class="flex items-center justify-between mb-4">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase">Open Trades</div>
+            <span id="open-count" class="muted small mono">—</span>
+          </div>
+          <div class="open-list" id="open-list"></div>
+        </div>
+
+        <!-- Telegram health -->
+        <div class="glass" style="padding:24px">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">Telegram Health · Channel Routing &amp; Delivery</div>
+          <div class="tg-grid" id="tg-grid"></div>
+        </div>
+
+        <!-- Recent feed -->
+        <div class="glass" style="padding:0;overflow:hidden">
+          <div style="padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase">Recent Closed Trades</div>
+            <span class="muted small mono">LAST 50</span>
+          </div>
+          <div style="max-height:480px;overflow-y:auto">
+            <table class="data-table feed-table" style="border-radius:0">
+              <thead style="position:sticky;top:0;background:var(--panel-solid);z-index:1">
+                <tr><th>Signal ID</th><th>Engine</th><th>Outcome</th><th class="num">Net Pips</th><th class="num">TP</th><th class="num">SL</th><th class="num">Duration</th><th>Closed</th></tr>
+              </thead>
+              <tbody id="feed-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+const ENGINE_PREFIX = {
+  NITRO:['VST_','XAU','GOLD'], DRAGON:['GBPJPY'], TITAN:['EURUSD','EUR_'],
+  CIPHER:['CIPH_','BTC'], PHANTOM:['PHNTM','SOL'], NEXUS:['NAS','NDX','NEXUS'],
+  VOLTALITY:['VS_'], FLUENCE:['US30'],
+};
+let ACTIVE_FILTER = null;
+let DAILY_CHART = null, RANK_CHART = null;
+
+function engineFromSignalId(sid){
+  if(!sid) return null;
+  const s = String(sid).toUpperCase();
+  for(const [eng, prefs] of Object.entries(ENGINE_PREFIX)){
+    if(prefs.some(p => s.startsWith(p.toUpperCase()))) return eng;
+  }
+  return null;
+}
+
+function setFilter(name){
+  ACTIVE_FILTER = (ACTIVE_FILTER === name) ? null : name;
+  render();
+}
+
+function render(){
+  if(!DATA) return;
+
+  // Sidebar engine list
+  const list = document.getElementById('engine-list');
+  list.innerHTML = ENGINES.map(([n,sym,label,color])=>{
+    const e = DATA.engines.find(x=>x.name===n) || {};
+    const ph = (DATA.process_health||{})[n] || {};
+    const proc = ph.running;
+    const filtered = ACTIVE_FILTER === n;
+    const dimmed = ACTIVE_FILTER && !filtered;
+    const pid = (ph.pids && ph.pids[0]) ? ph.pids[0].slice(-4) : '—';
+    return `<div class="engine-row ${filtered?'filtered':''} ${dimmed?'dimmed':''}" data-engine="${n}">
+      <span class="dot" style="background:${color};${(e.open_trades||0)>0?'box-shadow:0 0 6px '+color:''}"></span>
+      <span class="name">${n}</span>
+      <span class="meta">${e.closed_trades||0}·${(e.net_pips||0)>=0?'+':''}${(e.net_pips||0).toFixed(0)}</span>
+      <span class="pid ${proc?'':'down'}">${pid}</span>
+    </div>`;
+  }).join('');
+
+  // Process status
+  const ps = document.getElementById('process-status');
+  const running = Object.entries(DATA.process_health||{}).filter(([,v])=>v.running).length;
+  const total = Object.keys(DATA.process_health||{}).length;
+  ps.innerHTML = `<div style="display:flex;justify-content:space-between"><span>Live:</span><strong style="color:var(--emerald-2)">${running}/${total}</strong></div>
+  <div style="display:flex;justify-content:space-between"><span>Updated:</span><strong>${new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</strong></div>`;
+
+  // Filter state
+  const filterState = document.getElementById('filter-state');
+  const filterBar = document.getElementById('filter-bar');
+  if(ACTIVE_FILTER){
+    const e = DATA.engines.find(x=>x.name===ACTIVE_FILTER);
+    filterState.innerHTML = `<span class="filter-active">${ACTIVE_FILTER} · ${e?.closed_trades||0} trades <button onclick="setFilter('${ACTIVE_FILTER}')">×</button></span>`;
+  } else {
+    filterState.textContent = 'All 9 engines';
+  }
+
+  // KPIs (filtered if active)
+  if(ACTIVE_FILTER){
+    const e = DATA.engines.find(x=>x.name===ACTIVE_FILTER);
+    if(e){
+      document.getElementById('kpi-pips').textContent = fmtPips(e.net_pips||0);
+      document.getElementById('kpi-pips').className = 'kpi-value ' + (e.net_pips>=0?'positive':'negative');
+      document.getElementById('kpi-pips-sub').textContent = `${e.closed_trades||0} closed`;
+      document.getElementById('kpi-usd').textContent = fmtUSD(e.net_dollars||0);
+      document.getElementById('kpi-usd').className = 'kpi-value ' + (e.net_dollars>=0?'positive':'negative');
+      document.getElementById('kpi-wr').textContent = fmtPct(e.win_rate||0);
+      document.getElementById('kpi-wr').className = 'kpi-value ' + (e.win_rate>=50?'positive':'negative');
+      document.getElementById('kpi-wr-sub').textContent = `${e.wins||0}W / ${e.losses||0}L`;
+      document.getElementById('kpi-open').textContent = e.open_trades||0;
+      document.getElementById('kpi-open-sub').textContent = ACTIVE_FILTER + ' only';
+      document.getElementById('kpi-signals').textContent = fmtNum(e.total_signals||0);
+      document.getElementById('kpi-engines').textContent = ACTIVE_FILTER;
+    }
+  } else {
+    const t = DATA.totals;
+    document.getElementById('kpi-pips').textContent = fmtPips(t.net_pips);
+    document.getElementById('kpi-pips').className = 'kpi-value ' + (t.net_pips>=0?'positive':'negative');
+    document.getElementById('kpi-pips-sub').textContent = `${fmtNum(t.total_closed)} closed`;
+    document.getElementById('kpi-usd').textContent = fmtUSD(t.net_dollars);
+    document.getElementById('kpi-usd').className = 'kpi-value ' + (t.net_dollars>=0?'positive':'negative');
+    document.getElementById('kpi-wr').textContent = fmtPct(t.win_rate);
+    document.getElementById('kpi-wr').className = 'kpi-value ' + (t.win_rate>=50?'positive':'negative');
+    document.getElementById('kpi-wr-sub').textContent = `${fmtNum(t.total_wins)}W / ${fmtNum(t.total_losses)}L`;
+    document.getElementById('kpi-open').textContent = fmtNum(t.total_open);
+    document.getElementById('kpi-signals').textContent = fmtNum(t.total_signals);
+    document.getElementById('kpi-engines').textContent = `${t.engines} engines active`;
+  }
+
+  // Daily chart
+  renderDaily();
+  // Ranking
+  renderRank();
+  // Open trades
+  renderOpen();
+  // TG health
+  renderTG();
+  // Feed
+  renderFeed();
+}
+
+function renderDaily(){
+  const ctx = document.getElementById('chart-daily').getContext('2d');
+  if(DAILY_CHART) DAILY_CHART.destroy();
+  const days = Object.keys(DATA.daily_pnl || {}).sort();
+  if(!days.length) return;
+  const datasets = ENGINES
+    .filter(([n]) => !ACTIVE_FILTER || ACTIVE_FILTER === n)
+    .map(([name,sym,label,color])=>({
+      label:name,
+      data:days.map(d => (DATA.daily_pnl[d] && DATA.daily_pnl[d][name]) ? DATA.daily_pnl[d][name].pips : 0),
+      backgroundColor:color, borderColor:color, stack:'pips',
+    }));
+  DAILY_CHART = new Chart(ctx,{type:'bar',data:{labels:days,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10},boxWidth:10}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)} pips`}}},
+      scales:{x:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9}},grid:{display:false}},
+        y:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+}
+
+function renderRank(){
+  const ctx = document.getElementById('chart-rank').getContext('2d');
+  if(RANK_CHART) RANK_CHART.destroy();
+  let ranked = [...DATA.engines].sort((a,b)=>b.net_pips-a.net_pips);
+  if(ACTIVE_FILTER) ranked = ranked.filter(e=>e.name===ACTIVE_FILTER);
+  RANK_CHART = new Chart(ctx,{type:'bar',
+    data:{labels:ranked.map(e=>e.name),datasets:[{data:ranked.map(e=>e.net_pips),
+      backgroundColor:ranked.map(e=>e.net_pips>=0?'#10b981':'#ef4444'),borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.x)+' pips'}}},
+      scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}}});
+}
+
+function renderOpen(){
+  const list = document.getElementById('open-list');
+  const all = DATA.open_trades;
+  const rows = ACTIVE_FILTER ? all.filter(t=>t.engine===ACTIVE_FILTER) : all;
+  document.getElementById('open-count').textContent = ACTIVE_FILTER
+    ? `${rows.length} matching · ${all.length} total open`
+    : `${all.length} open trades`;
+  if(!rows.length){ list.innerHTML = '<div style="text-align:center;color:var(--dim);padding:24px">No open trades</div>'; return; }
+  list.innerHTML = rows.slice(0,30).map(t=>{
+    const filtered = ACTIVE_FILTER && t.engine===ACTIVE_FILTER;
+    const dimmed = ACTIVE_FILTER && t.engine!==ACTIVE_FILTER;
+    const dec = t.symbol==='EURUSD'||t.symbol==='GBPJPY'?5:2;
+    return `<div class="open-item ${filtered?'filtered':''} ${dimmed?'dimmed':''}">
+      <span class="open-engine" style="color:${t.color}">${t.engine}</span>
+      <div class="open-detail">
+        <span class="pill ${t.direction.toLowerCase()}">${t.direction}</span>
+        <span>${t.symbol} <strong>${t.entry?.toFixed(dec)}</strong></span>
+        <span class="muted">SL ${t.sl?.toFixed(dec)}</span>
+        <span class="muted">TP1 ${t.tp1_hit?'✓ ':''}${t.tp1?.toFixed(dec)}</span>
+        <span class="muted">TP2 ${t.tp2_hit?'✓ ':''}${t.tp2?.toFixed(dec)}</span>
+        <span class="muted">Score ${t.score||'—'}</span>
+      </div>
+      <div class="open-meta">${fmtTime(t.opened_at)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTG(){
+  const grid = document.getElementById('tg-grid');
+  grid.innerHTML = (DATA.telegram_health||[]).map(t=>{
+    const ph = (DATA.process_health||{})[t.engine] || {};
+    const proc = ph.running;
+    const procPid = (ph.pids && ph.pids[0]) || null;
+    const filtered = ACTIVE_FILTER === t.engine;
+    const dimmed = ACTIVE_FILTER && !filtered;
+    const rate = t.success_rate;
+    let rateClass='none',rateText='—';
+    if(rate!==null && rate!==undefined){
+      if(rate>=90){rateClass='high';rateText=rate.toFixed(0)+'%'}
+      else if(rate>=50){rateClass='mid';rateText=rate.toFixed(0)+'%'}
+      else{rateClass='low';rateText=rate.toFixed(0)+'%'}
+    }
+    const procBadge = proc ? `<span style="color:var(--emerald-2)">● ${procPid}</span>` : `<span style="color:var(--red-2)">● DOWN</span>`;
+    return `<div class="tg-card ${filtered?'filtered':''} ${dimmed?'dimmed':''}" data-engine="${t.engine}">
+      <div class="head">
+        <div class="name" style="color:${t.color}">${t.engine}</div>
+        <div class="channel">${t.channel_name}</div>
+      </div>
+      <div class="tg-row"><span class="label">Chat ID</span><span class="value muted">${t.chat_id}</span></div>
+      <div class="tg-row"><span class="label">Process</span><span class="value">${procBadge}</span></div>
+      <div class="tg-row"><span class="label">Last Signal</span><span class="value">${fmtTime(t.last_signal_delivery)}</span></div>
+      <div class="tg-row"><span class="label">Last Update</span><span class="value">${fmtTime(t.last_trade_update)}</span></div>
+      <div class="tg-row"><span class="label">Replies</span><span class="value">${t.successful_replies} / ${t.total_updates}</span></div>
+      <div class="tg-row"><span class="label">Success</span><span class="tg-rate ${rateClass}">${rateText}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderFeed(){
+  const tb = document.getElementById('feed-tbody');
+  let rows = DATA.feed.slice(0,50);
+  if(ACTIVE_FILTER){
+    rows = rows.filter(f => engineFromSignalId(f.signal_id) === ACTIVE_FILTER);
+  }
+  if(!rows.length){ tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:24px">No closed trades</td></tr>'; return; }
+  tb.innerHTML = rows.map(t=>{
+    const eng = engineFromSignalId(t.signal_id) || 'unknown';
+    const filtered = ACTIVE_FILTER && eng === ACTIVE_FILTER;
+    const dimmed = ACTIVE_FILTER && eng !== ACTIVE_FILTER;
+    const color = ENGINES.find(e=>e[0]===eng)?.[3] || 'var(--muted)';
+    return `<tr style="${filtered?'background:rgba(0,212,255,0.04)':''};${dimmed?'opacity:0.3':''}">
+      <td class="muted small">${t.signal_id}</td>
+      <td><span style="color:${color};font-weight:600">${eng}</span></td>
+      <td><span class="pill ${t.outcome==='win'?'win':t.outcome==='loss'?'loss':'neutral'}">${(t.outcome||'?').toUpperCase()}</span></td>
+      <td class="num ${t.net_pips>0?'positive':'negative'}">${fmtPips(t.net_pips)}</td>
+      <td class="num muted">${t.tp_hit||'—'}</td>
+      <td class="num muted">${t.sl_hit?'YES':'NO'}</td>
+      <td class="num muted">${t.duration_min?Math.round(t.duration_min)+'m':'—'}</td>
+      <td class="muted small">${fmtTime(t.closed_at)}</td>
+    </tr>`;
+  }).join('');
+}
+
+document.addEventListener('click', e=>{
+  const engineRow = e.target.closest('.engine-row');
+  const tgCard = e.target.closest('.tg-card');
+  if(engineRow){ setFilter(engineRow.dataset.engine); }
+  else if(tgCard){ setFilter(tgCard.dataset.engine); }
+});
+
+window.onDataReady = render;
+initPage('dashboard');
+</script>
+
+</body>
+</html>

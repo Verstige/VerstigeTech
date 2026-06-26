@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Performance · VerstigeTech</title>
+<link rel="stylesheet" href="assets/styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .perf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px;margin-bottom:32px}
+  .perf-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;position:relative;overflow:hidden}
+  .perf-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cyan)}
+  .perf-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .perf-name{font-family:var(--font-mono);font-weight:700;font-size:18px;letter-spacing:0.05em}
+  .perf-symbol{font-family:var(--font-mono);font-size:10px;color:var(--dim);background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:4px}
+  .metric-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);font-family:var(--font-mono);font-size:12px}
+  .metric-row:last-child{border-bottom:none}
+  .metric-row .l{color:var(--dim);text-transform:uppercase;letter-spacing:0.1em;font-size:10px}
+  .metric-row .v{font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="page-hero" style="padding:60px 0 30px">
+    <div class="container">
+      <span class="eyebrow gold">PERFORMANCE</span>
+      <h1>Per-strategy, <span class="gradient-text">deconstructed.</span></h1>
+      <p>Best trade, worst trade, average win, average loss — every metric that drives the next iteration.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+
+      <!-- Top stats -->
+      <div class="kpi-grid">
+        <div class="kpi emerald"><div class="kpi-label">Best Trade</div><div class="kpi-value positive" id="p-best">—</div><div class="kpi-sub" id="p-best-eng">—</div></div>
+        <div class="kpi red"><div class="kpi-label">Worst Trade</div><div class="kpi-value negative" id="p-worst">—</div><div class="kpi-sub" id="p-worst-eng">—</div></div>
+        <div class="kpi gold"><div class="kpi-label">Avg Win</div><div class="kpi-value gold" id="p-avgwin">—</div><div class="kpi-sub">across all winners</div></div>
+        <div class="kpi pink"><div class="kpi-label">Avg Loss</div><div class="kpi-value negative" id="p-avgloss">—</div><div class="kpi-sub">across all losers</div></div>
+        <div class="kpi purple"><div class="kpi-label">Payoff Ratio</div><div class="kpi-value" id="p-payoff">—</div><div class="kpi-sub">avg win / |avg loss|</div></div>
+      </div>
+
+      <!-- Distribution chart -->
+      <div class="glass" style="padding:24px;margin-bottom:32px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">P&amp;L Distribution</div>
+        <canvas id="chart-distribution" height="100"></canvas>
+      </div>
+
+      <!-- Per-engine cards -->
+      <div class="section-header">
+        <span class="eyebrow purple">PER-ENGINE</span>
+        <h2 class="section-title">Every engine, every metric.</h2>
+      </div>
+      <div class="perf-grid" id="perf-cards"></div>
+
+      <!-- Recent winners/losers -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px">
+        <div class="glass" style="padding:24px">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--emerald-2);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">🏆 Top 10 Winners</div>
+          <div id="winners-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <div class="glass" style="padding:24px">
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--red-2);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">💀 Top 10 Losers</div>
+          <div id="losers-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+const ENGINE_PREFIX = {
+  NITRO:['VST_','XAU','GOLD'], DRAGON:['GBPJPY'], TITAN:['EURUSD','EUR_'],
+  CIPHER:['CIPH_','BTC'], PHANTOM:['PHNTM','SOL'], NEXUS:['NAS','NDX','NEXUS'],
+  VOLTALITY:['VS_'], FLUENCE:['US30'],
+};
+function engineFromSignalId(sid){
+  if(!sid) return null;
+  const s = String(sid).toUpperCase();
+  for(const [eng, prefs] of Object.entries(ENGINE_PREFIX)){
+    if(prefs.some(p => s.startsWith(p.toUpperCase()))) return eng;
+  }
+  return null;
+}
+
+let DIST_CHART = null;
+
+function render(){
+  if(!DATA) return;
+
+  const feed = DATA.feed;
+  const wins = feed.filter(f=>f.net_pips>0);
+  const losses = feed.filter(f=>f.net_pips<=0);
+
+  // Best/worst
+  const best = [...feed].sort((a,b)=>b.net_pips-a.net_pips)[0];
+  const worst = [...feed].sort((a,b)=>a.net_pips-b.net_pips)[0];
+  if(best){
+    document.getElementById('p-best').textContent = fmtPips(best.net_pips);
+    document.getElementById('p-best-eng').textContent = engineFromSignalId(best.signal_id)+' · '+best.signal_id;
+  }
+  if(worst){
+    document.getElementById('p-worst').textContent = fmtPips(worst.net_pips);
+    document.getElementById('p-worst-eng').textContent = engineFromSignalId(worst.signal_id)+' · '+worst.signal_id;
+  }
+
+  // Avg win/loss
+  const avgW = wins.length ? wins.reduce((s,f)=>s+f.net_pips,0)/wins.length : 0;
+  const avgL = losses.length ? losses.reduce((s,f)=>s+f.net_pips,0)/losses.length : 0;
+  document.getElementById('p-avgwin').textContent = fmtPips(avgW);
+  document.getElementById('p-avgloss').textContent = fmtPips(avgL);
+  document.getElementById('p-payoff').textContent = avgL!==0 ? (Math.abs(avgW/Math.abs(avgL))).toFixed(2)+'×' : '∞';
+
+  // Distribution histogram
+  const ctx = document.getElementById('chart-distribution').getContext('2d');
+  if(DIST_CHART) DIST_CHART.destroy();
+  const buckets = {};
+  for(const f of feed){
+    const bucket = Math.round(f.net_pips/100)*100;
+    buckets[bucket] = (buckets[bucket]||0)+1;
+  }
+  const labels = Object.keys(buckets).map(Number).sort((a,b)=>a-b);
+  const data = labels.map(l=>buckets[l]);
+  DIST_CHART = new Chart(ctx,{type:'bar',
+    data:{labels:labels.map(l=>fmtPips(l)),datasets:[{
+      data,
+      backgroundColor:labels.map(l=>l>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)'),
+      borderColor:labels.map(l=>l>=0?'#10b981':'#ef4444'),
+      borderWidth:1,borderRadius:4,
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label} pips: ${c.parsed.y} trades`}}},
+      scales:{x:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10},maxRotation:45},grid:{display:false}},
+        y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+
+  // Per-engine cards
+  const cards = document.getElementById('perf-cards');
+  cards.innerHTML = DATA.engines.map(e=>{
+    const eng = ENGINES.find(x=>x[0]===e.name);
+    const color = eng?eng[3]:'#888';
+    const sym = eng?eng[1]:'';
+    return `<div class="perf-card" style="--accent:${color}">
+      <div class="perf-head">
+        <div class="perf-name" style="color:${color}">${e.name}</div>
+        <div class="perf-symbol">${sym}</div>
+      </div>
+      <div class="metric-row"><span class="l">Net Pips</span><span class="v ${e.net_pips>0?'positive':'negative'}" style="color:${e.net_pips>0?'var(--emerald-2)':'var(--red-2)'}">${fmtPips(e.net_pips||0)}</span></div>
+      <div class="metric-row"><span class="l">P&amp;L ($)</span><span class="v" style="color:${e.net_dollars>0?'var(--emerald-2)':'var(--red-2)'}">${fmtUSD(e.net_dollars||0)}</span></div>
+      <div class="metric-row"><span class="l">Closed</span><span class="v">${e.closed_trades||0}</span></div>
+      <div class="metric-row"><span class="l">Wins / Losses</span><span class="v"><span style="color:var(--emerald-2)">${e.wins||0}W</span> / <span style="color:var(--red-2)">${e.losses||0}L</span></span></div>
+      <div class="metric-row"><span class="l">Win Rate</span><span class="v">${fmtPct(e.win_rate||0)}</span></div>
+      <div class="metric-row"><span class="l">Avg / Trade</span><span class="v">${fmtPips(e.avg_pips||0)}</span></div>
+      <div class="metric-row"><span class="l">Best Trade</span><span class="v" style="color:var(--emerald-2)">${fmtPips(e.best_trade||0)}</span></div>
+      <div class="metric-row"><span class="l">Worst Trade</span><span class="v" style="color:var(--red-2)">${fmtPips(e.worst_trade||0)}</span></div>
+      <div class="metric-row"><span class="l">Open</span><span class="v" style="color:var(--gold)">${e.open_trades||0}</span></div>
+      <div class="metric-row"><span class="l">Signals</span><span class="v">${fmtNum(e.total_signals||0)}</span></div>
+    </div>`;
+  }).join('');
+
+  // Winners/losers
+  const winners = [...feed].sort((a,b)=>b.net_pips-a.net_pips).slice(0,10);
+  const losers = [...feed].sort((a,b)=>a.net_pips-b.net_pips).slice(0,10);
+  document.getElementById('winners-list').innerHTML = winners.map(f=>{
+    const eng = engineFromSignalId(f.signal_id) || 'unknown';
+    const color = ENGINES.find(x=>x[0]===eng)?.[3] || '#888';
+    return `<div class="flex items-center justify-between" style="padding:8px 12px;background:rgba(16,185,129,0.05);border-radius:6px;border:1px solid rgba(16,185,129,0.15)">
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="color:${color};font-family:var(--font-mono);font-weight:700;font-size:11px">${eng}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${f.signal_id}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="mono" style="color:var(--emerald-2);font-weight:600">${fmtPips(f.net_pips)}</span>
+        <span class="muted small">${fmtTime(f.closed_at)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('losers-list').innerHTML = losers.map(f=>{
+    const eng = engineFromSignalId(f.signal_id) || 'unknown';
+    const color = ENGINES.find(x=>x[0]===eng)?.[3] || '#888';
+    return `<div class="flex items-center justify-between" style="padding:8px 12px;background:rgba(239,68,68,0.05);border-radius:6px;border:1px solid rgba(239,68,68,0.15)">
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="color:${color};font-family:var(--font-mono);font-weight:700;font-size:11px">${eng}</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${f.signal_id}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="mono" style="color:var(--red-2);font-weight:600">${fmtPips(f.net_pips)}</span>
+        <span class="muted small">${fmtTime(f.closed_at)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.onDataReady = render;
+initPage('performance');
+</script>
+
+</body>
+</html>

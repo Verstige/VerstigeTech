@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Strategy Catalog · VerstigeTech</title>
+<link rel="stylesheet" href="assets/styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .strategy-detail{padding:60px 0;border-top:1px solid var(--border)}
+  .strategy-detail:first-of-type{border-top:none;padding-top:0}
+  .strategy-header{
+    display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center;
+    margin-bottom:32px;
+  }
+  @media(max-width:900px){.strategy-header{grid-template-columns:1fr}}
+  .strategy-hero{
+    padding:32px;border-radius:var(--radius);position:relative;overflow:hidden;
+  }
+  .strategy-hero h2{
+    font-family:var(--font-mono);font-size:36px;font-weight:700;
+    letter-spacing:0.02em;margin:8px 0;
+  }
+  .strategy-hero .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:0.18em;color:var(--dim);text-transform:uppercase}
+  .strategy-hero .desc{color:var(--muted);font-size:14px;margin-top:16px;line-height:1.6}
+  .strategy-stats{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+  }
+  .strategy-stat{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:14px 16px;
+  }
+  .strategy-stat .l{font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase}
+  .strategy-stat .v{font-family:var(--font-mono);font-size:18px;font-weight:600;margin-top:4px}
+  .spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:24px}
+  .spec{
+    background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:16px;
+  }
+  .spec-label{font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.12em;text-transform:uppercase}
+  .spec-value{font-family:var(--font-mono);font-size:14px;margin-top:4px;color:var(--text)}
+  .chart-strip{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="page-hero" style="padding:60px 0 30px">
+    <div class="container">
+      <span class="eyebrow gold">STRATEGY CATALOG</span>
+      <h1>Every engine. <span class="gradient-text">Decoded.</span></h1>
+      <p>Entry logic, exit logic, filters, and live performance for all 9 engines.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+      <div class="glass" style="padding:24px">
+        <div class="flex items-center justify-between mb-4">
+          <h3 style="font-size:14px;font-family:var(--font-mono);color:var(--muted);letter-spacing:0.1em;text-transform:uppercase">Jump to engine</h3>
+          <span id="total-engines" class="pill gold">9 ENGINES</span>
+        </div>
+        <div id="jump-nav" class="flex items-center gap-2" style="flex-wrap:wrap"></div>
+      </div>
+    </div>
+  </section>
+
+  <div id="strategy-content"></div>
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+// Strategy descriptions — keep in sync with the strategy catalog
+const STRATEGY_DATA = {
+  NITRO: {
+    symbol:'XAUUSD',
+    desc:'Smart-money concepts (order blocks, fair value gaps) layered with EMA-200 trend filter and ADX momentum gate. Designed to catch the gold trend early and ride it through pullbacks. Best in trending sessions (London/NY overlap).',
+    type:'Trend + SMC',
+    timeframe:'5m / 1h / 4h',
+    risk_pips:80,
+    rr_target:'1:3',
+    filters:['EMA-200 trend','ADX > 25','Session filter (London/NY)','ATR volatility gate'],
+    entry:['Order block tap with displacement','FVG fill + continuation','Liquidity sweep + reclaim'],
+    exit:['TP1: 1.5R (50%)','TP2: 2.5R (30%)','TP3: 4R (20%)'],
+  },
+  SURGE: {
+    symbol:'US30',
+    desc:'Momentum breakout engine on US30. Detects consolidation ranges, then enters on volume-confirmed breakouts. Heavy use of opening range breakouts (ORB) during the first 30 min of NYSE.',
+    type:'Momentum Breakout',
+    timeframe:'5m / 15m',
+    risk_pips:200,
+    rr_target:'1:2',
+    filters:['Range detection (ATR < 20)','Volume > 1.5x avg','9:30-10:00 AM EST ORB'],
+    entry:['ORB high/low breakout','Consolidation range breakout','VWAP reclaim'],
+    exit:['TP1: 100 pts','TP2: 200 pts','TP3: 350 pts','Trailing stop after TP1'],
+  },
+  DRAGON: {
+    symbol:'GBPJPY',
+    desc:'Reversal engine targeting the Beast of Forex. Uses RSI divergence, KDJ exhaustion, and supply/demand zones to fade the trend at exhaustion points. High reward-to-risk on the right setups.',
+    type:'Reversal',
+    timeframe:'15m / 1h',
+    risk_pips:30,
+    rr_target:'1:4',
+    filters:['RSI divergence','KDJ > 80 or < 20','S/D zone tap'],
+    entry:['Bullish/bearish divergence','S/D zone rejection','Liquidity grab + reversal'],
+    exit:['TP1: 1R','TP2: 2R','TP3: 3R','Move SL to BE after TP1'],
+  },
+  TITAN: {
+    symbol:'EURUSD',
+    desc:'Trend-following on EUR/USD with heavy regime filter. 4H trend gate required before any 5m entry. ATR-based stops, dynamic position sizing. Conservative — fewer trades, higher conviction.',
+    type:'Trend + Heavy Filter',
+    timeframe:'5m / 4h',
+    risk_pips:50,
+    rr_target:'1:2.5',
+    filters:['4H EMA-200 trend','ADX > 20','Min score 55','No 50-pip gap in last 4h'],
+    entry:['Pullback to EMA-20','Breakout with retest','Order block + FVG confluence'],
+    exit:['TP1: 1R','TP2: 2R','TP3: 3R','TP4: 4R (runner)'],
+  },
+  CIPHER: {
+    symbol:'BTCUSD',
+    desc:'4-hour smart-money engine on BTC. Looks for institutional order blocks and fair value gaps on the 4H timeframe. Waits for 5m confirmation before entry. Rides the swing.',
+    type:'4H SMC',
+    timeframe:'5m / 4h',
+    risk_pips:350,
+    rr_target:'1:3',
+    filters:['4H structure shift','5m confirmation candle','Volume profile'],
+    entry:['4H OB tap + 5m confirmation','FVG fill + continuation','Liquidity void fill'],
+    exit:['TP1: 1R (33%)','TP2: 2R (33%)','TP3: 3R (34%)'],
+  },
+  PHANTOM: {
+    symbol:'SOLUSD',
+    desc:'Weighted scoring model on SOL. Combines EMA trend, RSI extremes, OB proximity, and volatility regime into a single score. Trades only setups above the score threshold.',
+    type:'Weighted Score',
+    timeframe:'5m / 1h',
+    risk_pips:80,
+    rr_target:'1:2',
+    filters:['EMA-12 trend alignment (12pts)','Volume spike (10pts)','RSI extremes (8pts)','OB proximity (8pts)','Liquidity zone (8pts)','Stoch (7pts)','Regime bias (10pts)'],
+    entry:['Score ≥ 25 with regime alignment','OB + EMA confluence','Liquidity sweep + reclaim'],
+    exit:['TP1: 1.5R','TP2: 2.5R','TP3: 4R','ATR trailing stop'],
+  },
+  NEXUS: {
+    symbol:'NAS100',
+    desc:'Prime zone entry on NAS100. Combines order blocks, fair value gaps, and EMA-200 with an "apex zone" — the exact level where multiple confluences intersect. High-precision, low-frequency.',
+    type:'Prime Zone + Apex',
+    timeframe:'5m / 15m',
+    risk_pips:100,
+    rr_target:'1:2.5',
+    filters:['EMA-200 trend','Apex zone proximity','Session volatility','ATR ≥ 20'],
+    entry:['Apex zone tap + rejection','OB + FVG confluence at prime','EMA-200 retest'],
+    exit:['TP1: 1R','TP2: 2R','TP3: 3R'],
+  },
+  VOLTALITY: {
+    symbol:'US30',
+    desc:'Prime-zone breakout engine on US30. Local 1m swing detection with 30-bar lookback and 30% minimum retrace. Targets the 61.8% fib at psychological .00/.50 levels. Built for volatility.',
+    type:'Swing + Fib',
+    timeframe:'1m / 5m',
+    risk_pips:200,
+    rr_target:'1:3',
+    filters:['Local swing (30 bars, 30% retrace)','61.8 fib rounding','20-min cooldown','ATR ≥ 20','5m trend filter (EMA 50)'],
+    entry:['Swing high/low break','61.8 fib at .00/.50','5m trend-aligned'],
+    exit:['TP1: 1R','TP2: 2R','TP3: 3R'],
+  },
+  FLUENCE: {
+    symbol:'US30',
+    desc:'Smart-money engine on US30. Combines order blocks, FVGs, and liquidity sweeps with VWAP context. Mid-frequency, balanced risk-reward. The workhorse of the fleet.',
+    type:'SMC Multi-Factor',
+    timeframe:'5m / 15m',
+    risk_pips:200,
+    rr_target:'1:2',
+    filters:['VWAP context','OB + FVG alignment','Liquidity sweep detection','Session filter'],
+    entry:['OB + FVG confluence','Liquidity sweep + reclaim','VWAP bounce'],
+    exit:['TP1: 100 pts','TP2: 200 pts','TP3: 300 pts'],
+  },
+};
+
+function render(){
+  if(!DATA) return;
+
+  // Jump nav
+  const jump = document.getElementById('jump-nav');
+  jump.innerHTML = ENGINES.map(([name,sym,label,color])=>
+    `<a href="#${name}" class="pill" style="border-color:${color};color:${color};background:${color}11">${name} · ${sym}</a>`
+  ).join('');
+
+  // Strategy content
+  const content = document.getElementById('strategy-content');
+  content.innerHTML = ENGINES.map(([name,sym,label,color])=>{
+    const e = DATA.engines.find(x=>x.name===name) || {};
+    const sd = STRATEGY_DATA[name];
+    const ph = (DATA.process_health||{})[name] || {};
+    const tg = (DATA.telegram_health||[]).find(t=>t.engine===name) || {};
+    const pipClass = e.net_pips > 0 ? 'positive' : e.net_pips < 0 ? 'negative' : 'neutral';
+    const usdClass = e.net_dollars > 0 ? 'positive' : e.net_dollars < 0 ? 'negative' : 'neutral';
+    return `
+    <section class="strategy-detail" id="${name}">
+      <div class="container">
+        <div class="strategy-header">
+          <div class="strategy-hero glass" style="border-left:4px solid ${color}">
+            <div class="tag" style="color:${color}">${sd.type}</div>
+            <h2 style="color:${color}">${name}</h2>
+            <div style="color:var(--dim);font-family:var(--font-mono);font-size:12px;letter-spacing:0.1em">${sym} · ${label}</div>
+            <div class="desc">${sd.desc}</div>
+          </div>
+          <div class="strategy-stats">
+            <div class="strategy-stat"><div class="l">NET PIPS</div><div class="v ${pipClass}">${fmtPips(e.net_pips||0)}</div></div>
+            <div class="strategy-stat"><div class="l">P&amp;L ($)</div><div class="v ${usdClass}">${fmtUSD(e.net_dollars||0)}</div></div>
+            <div class="strategy-stat"><div class="l">WIN RATE</div><div class="v">${fmtPct(e.win_rate||0)}</div></div>
+            <div class="strategy-stat"><div class="l">CLOSED</div><div class="v">${fmtNum(e.closed_trades||0)}</div></div>
+            <div class="strategy-stat"><div class="l">OPEN</div><div class="v gold">${e.open_trades||0}</div></div>
+            <div class="strategy-stat"><div class="l">SIGNALS</div><div class="v">${fmtNum(e.total_signals||0)}</div></div>
+          </div>
+        </div>
+
+        <div class="spec-grid">
+          <div class="spec"><div class="spec-label">Timeframe</div><div class="spec-value">${sd.timeframe}</div></div>
+          <div class="spec"><div class="spec-label">Risk (pips)</div><div class="spec-value">${sd.risk_pips}</div></div>
+          <div class="spec"><div class="spec-label">R:R Target</div><div class="spec-value">${sd.rr_target}</div></div>
+          <div class="spec"><div class="spec-label">Telegram</div><div class="spec-value">${tg.channel_name || '—'}</div></div>
+          <div class="spec"><div class="spec-label">Last Signal</div><div class="spec-value">${fmtTime(e.last_signal_ts)}</div></div>
+          <div class="spec"><div class="spec-label">Process</div><div class="spec-value">${ph.running?'<span style="color:var(--emerald-2)">● LIVE</span>':'<span style="color:var(--red)">● DOWN</span>'}</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:32px">
+          <div class="glass" style="padding:20px">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Entry Triggers</div>
+            ${sd.entry.map(x=>`<div style="font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--border)">→ ${x}</div>`).join('')}
+          </div>
+          <div class="glass" style="padding:20px">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Exit Plan</div>
+            ${sd.exit.map(x=>`<div style="font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--border)">→ ${x}</div>`).join('')}
+          </div>
+          <div class="glass" style="padding:20px">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Filters</div>
+            ${sd.filters.map(x=>`<div style="font-size:13px;color:var(--text);padding:6px 0;border-bottom:1px solid var(--border)">✓ ${x}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </section>`;
+  }).join('');
+}
+
+window.onDataReady = render;
+initPage('strategies');
+</script>
+
+</body>
+</html>

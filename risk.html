@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Risk · VerstigeTech</title>
+<link rel="stylesheet" href="assets/styles.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .risk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:32px}
+  .risk-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;position:relative;overflow:hidden}
+  .risk-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .risk-card.danger::before{background:var(--red)}
+  .risk-card.warn::before{background:var(--gold)}
+  .risk-card.ok::before{background:var(--emerald)}
+  .risk-card.info::before{background:var(--cyan)}
+  .risk-title{font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px}
+  .risk-value{font-family:var(--font-mono);font-size:36px;font-weight:600;line-height:1.1;letter-spacing:-0.02em}
+  .risk-value.danger{color:var(--red-2)}
+  .risk-value.warn{color:var(--gold)}
+  .risk-value.ok{color:var(--emerald-2)}
+  .risk-value.info{color:var(--cyan)}
+  .risk-sub{font-family:var(--font-mono);font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5}
+  .exposure-bar{height:6px;border-radius:3px;background:rgba(255,255,255,0.05);overflow:hidden;margin-top:8px}
+  .exposure-bar .fill{height:100%;border-radius:3px;transition:width 0.3s ease}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="page-hero" style="padding:60px 0 30px">
+    <div class="container">
+      <span class="eyebrow" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:var(--red-2)">RISK</span>
+      <h1>Risk <span class="gradient-text">exposed.</span></h1>
+      <p>Drawdown, exposure, correlation, max consecutive losses — every metric that keeps us honest.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:20px">
+    <div class="container">
+
+      <!-- Risk KPI grid -->
+      <div class="risk-grid">
+        <div class="risk-card danger" id="rc-maxdd">
+          <div class="risk-title">Max Drawdown</div>
+          <div class="risk-value" id="r-maxdd">—</div>
+          <div class="risk-sub" id="r-maxdd-sub">peak-to-trough pips</div>
+        </div>
+        <div class="risk-card info">
+          <div class="risk-title">Current Drawdown</div>
+          <div class="risk-value" id="r-curdd">—</div>
+          <div class="risk-sub">from last peak</div>
+        </div>
+        <div class="risk-card warn">
+          <div class="risk-title">Max Consecutive Losses</div>
+          <div class="risk-value" id="r-mcl">—</div>
+          <div class="risk-sub" id="r-mcl-sub">—</div>
+        </div>
+        <div class="risk-card warn">
+          <div class="risk-title">Max Consecutive Wins</div>
+          <div class="risk-value" id="r-mcw">—</div>
+          <div class="risk-sub" id="r-mcw-sub">—</div>
+        </div>
+        <div class="risk-card ok">
+          <div class="risk-title">Recovery Factor</div>
+          <div class="risk-value" id="r-rf">—</div>
+          <div class="risk-sub">net pips / max drawdown</div>
+        </div>
+        <div class="risk-card info">
+          <div class="risk-title">Sharpe (Approx)</div>
+          <div class="risk-value" id="r-sharpe">—</div>
+          <div class="risk-sub">mean(pips) / stdev(pips)</div>
+        </div>
+      </div>
+
+      <!-- Drawdown chart -->
+      <div class="glass" style="padding:24px;margin-bottom:32px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Equity Curve &amp; Drawdown</div>
+        <canvas id="chart-equity" height="120"></canvas>
+      </div>
+
+      <!-- Exposure per engine -->
+      <div class="glass" style="padding:24px;margin-bottom:32px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">Live Exposure per Engine</div>
+        <div id="exposure-list"></div>
+      </div>
+
+      <!-- Correlation matrix -->
+      <div class="glass" style="padding:24px">
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Engine Correlation (Daily P&amp;L)</div>
+        <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:16px">Lower correlation = better diversification. Cells show correlation of daily P&amp;L between engines.</p>
+        <div id="correlation-grid" style="overflow-x:auto"></div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+const ENGINE_PREFIX = {
+  NITRO:['VST_','XAU','GOLD'], DRAGON:['GBPJPY'], TITAN:['EURUSD','EUR_'],
+  CIPHER:['CIPH_','BTC'], PHANTOM:['PHNTM','SOL'], NEXUS:['NAS','NDX','NEXUS'],
+  VOLTALITY:['VS_'], FLUENCE:['US30'],
+};
+function engineFromSignalId(sid){
+  if(!sid) return null;
+  const s = String(sid).toUpperCase();
+  for(const [eng, prefs] of Object.entries(ENGINE_PREFIX)){
+    if(prefs.some(p => s.startsWith(p.toUpperCase()))) return eng;
+  }
+  return null;
+}
+
+let EQUITY_CHART = null;
+
+function render(){
+  if(!DATA) return;
+  const feed = DATA.feed;
+
+  // Sort by closed_at
+  const sorted = [...feed].sort((a,b)=>new Date(a.closed_at)-new Date(b.closed_at));
+
+  // Equity curve
+  let cum = 0;
+  const equity = [];
+  const drawdown = [];
+  let peak = 0;
+  let maxDD = 0;
+  for(const f of sorted){
+    cum += f.net_pips;
+    equity.push(cum);
+    if(cum > peak) peak = cum;
+    const dd = peak - cum;
+    drawdown.push(-dd);
+    if(dd > maxDD) maxDD = dd;
+  }
+
+  // Max consecutive wins/losses
+  let mcl=0, curL=0, mclEng='';
+  let mcw=0, curW=0, mcwEng='';
+  let curLEng='', curWEng='';
+  for(const f of sorted){
+    if(f.net_pips<=0){
+      curL++;
+      curLEng = engineFromSignalId(f.signal_id);
+      if(curL>mcl){mcl=curL; mclEng=curLEng}
+      curW=0;
+    } else {
+      curW++;
+      curWEng = engineFromSignalId(f.signal_id);
+      if(curW>mcw){mcw=curW; mcwEng=curWEng}
+      curL=0;
+    }
+  }
+
+  // Current drawdown (last peak)
+  const lastPeak = Math.max(...equity);
+  const currentDD = lastPeak - cum;
+
+  // Recovery factor
+  const recoveryFactor = maxDD > 0 ? cum / maxDD : cum > 0 ? 999 : 0;
+
+  // Sharpe (simple, daily equivalent)
+  const pipsArray = sorted.map(f=>f.net_pips);
+  const mean = pipsArray.reduce((s,p)=>s+p,0)/Math.max(1,pipsArray.length);
+  const variance = pipsArray.reduce((s,p)=>s+(p-mean)**2,0)/Math.max(1,pipsArray.length);
+  const stdev = Math.sqrt(variance);
+  const sharpe = stdev > 0 ? (mean/stdev)*Math.sqrt(252) : 0;
+
+  // Update KPIs
+  document.getElementById('r-maxdd').textContent = fmtPips(-maxDD);
+  document.getElementById('r-maxdd').className = 'risk-value danger';
+  document.getElementById('r-maxdd-sub').textContent = `${fmtPips(maxDD)} pips · ${((maxDD/Math.max(1,lastPeak))*100).toFixed(1)}% of peak`;
+  document.getElementById('r-curdd').textContent = currentDD>0?fmtPips(-currentDD):'$0';
+  document.getElementById('r-curdd').className = 'risk-value ' + (currentDD>0?'info':'ok');
+  document.getElementById('r-mcl').textContent = mcl;
+  document.getElementById('r-mcl').className = 'risk-value warn';
+  document.getElementById('r-mcl-sub').textContent = `${mclEng} engine`;
+  document.getElementById('r-mcw').textContent = mcw;
+  document.getElementById('r-mcw').className = 'risk-value warn';
+  document.getElementById('r-mcw-sub').textContent = `${mcwEng} engine`;
+  document.getElementById('r-rf').textContent = recoveryFactor===999?'∞':recoveryFactor.toFixed(2)+'×';
+  document.getElementById('r-rf').className = 'risk-value ' + (recoveryFactor>=2?'ok':recoveryFactor>=1?'info':'danger');
+  document.getElementById('r-sharpe').textContent = sharpe.toFixed(2);
+  document.getElementById('r-sharpe').className = 'risk-value ' + (sharpe>=2?'ok':sharpe>=1?'info':'warn');
+
+  // Equity + drawdown chart
+  const ctx = document.getElementById('chart-equity').getContext('2d');
+  if(EQUITY_CHART) EQUITY_CHART.destroy();
+  const labels = sorted.map(f=>fmtTime(f.closed_at));
+  EQUITY_CHART = new Chart(ctx,{type:'line',
+    data:{labels:labels.slice().reverse(),datasets:[
+      {label:'Equity (pips)',data:equity.slice().reverse(),borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2,yAxisID:'y'},
+      {label:'Drawdown',data:drawdown.slice().reverse(),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2,yAxisID:'y'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)}`}}},
+      scales:{
+        x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9},maxTicksLimit:8},grid:{display:false}},
+        y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
+      }});
+
+  // Exposure per engine
+  const totalOpen = DATA.open_trades.length;
+  const exposure = DATA.engines.map(e=>{
+    const open = DATA.open_trades.filter(t=>t.engine===e.name).length;
+    return {name:e.name, open, sym:ENGINES.find(x=>x[0]===e.name)?.[1]||'',color:ENGINES.find(x=>x[0]===e.name)?.[3]||'#888'};
+  }).sort((a,b)=>b.open-a.open);
+  document.getElementById('exposure-list').innerHTML = exposure.map(e=>{
+    const pct = totalOpen>0?(e.open/totalOpen*100):0;
+    return `<div style="margin-bottom:14px">
+      <div class="flex items-center justify-between" style="margin-bottom:4px">
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="color:${e.color};font-family:var(--font-mono);font-weight:700;font-size:12px">${e.name}</span>
+          <span class="muted small">${e.sym}</span>
+        </div>
+        <div class="mono small"><strong>${e.open}</strong> open · ${pct.toFixed(0)}%</div>
+      </div>
+      <div class="exposure-bar"><div class="fill" style="width:${pct}%;background:${e.color}"></div></div>
+    </div>`;
+  }).join('');
+
+  // Correlation matrix (simple Pearson on daily pips)
+  const engines = DATA.engines.map(e=>e.name);
+  const dailyByEngine = {};
+  for(const e of engines) dailyByEngine[e] = {};
+  // Build daily_pips per engine from daily_pnl
+  const days = Object.keys(DATA.daily_pnl||{}).sort();
+  for(const d of days){
+    for(const e of engines){
+      dailyByEngine[e][d] = (DATA.daily_pnl[d] && DATA.daily_pnl[d][e]) ? DATA.daily_pnl[d][e].pips : 0;
+    }
+  }
+  function pearson(a, b){
+    const n = Math.min(a.length, b.length);
+    if(n<2) return 0;
+    const ma = a.reduce((s,v)=>s+v,0)/n;
+    const mb = b.reduce((s,v)=>s+v,0)/n;
+    let num=0, da=0, db=0;
+    for(let i=0;i<n;i++){
+      num += (a[i]-ma)*(b[i]-mb);
+      da += (a[i]-ma)**2;
+      db += (b[i]-mb)**2;
+    }
+    const den = Math.sqrt(da*db);
+    return den===0?0:num/den;
+  }
+
+  const grid = document.getElementById('correlation-grid');
+  let html = '<table class="data-table" style="font-size:10px"><thead><tr><th></th>';
+  for(const e of engines) html += `<th style="text-align:center;padding:6px">${e}</th>`;
+  html += '</tr></thead><tbody>';
+  for(const e1 of engines){
+    html += `<tr><td style="font-weight:600;color:${ENGINES.find(x=>x[0]===e1)?.[3]||'#888'}">${e1}</td>`;
+    for(const e2 of engines){
+      if(e1===e2){ html += '<td class="num muted">—</td>'; continue; }
+      const series1 = days.map(d=>dailyByEngine[e1][d]);
+      const series2 = days.map(d=>dailyByEngine[e2][d]);
+      const r = pearson(series1, series2);
+      const intensity = Math.abs(r);
+      const color = r>0?`rgba(16,185,129,${intensity})`:`rgba(239,68,68,${intensity})`;
+      html += `<td class="num" style="background:${color};color:${intensity>0.5?'#fff':'var(--text)'};padding:6px;font-weight:600">${r.toFixed(2)}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  grid.innerHTML = html;
+}
+
+window.onDataReady = render;
+initPage('risk');
+</script>
+
+</body>
+</html>

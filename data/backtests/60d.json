@@ -1,0 +1,20 @@
+{
+  "window": "60d",
+  "start": "2026-04-26",
+  "end": "2026-06-25",
+  "generated": "2026-06-25T20:00:00+00:00",
+  "interval": "5m",
+  "engines": [
+    {"name":"VOLTALITY","symbol":"US30","signals":300,"wins":180,"partials":80,"losses":40,"bugs":0,"pending":0,"wr":80.4,"total_pips":51350,"avg_pips":171.2,"closed":300},
+    {"name":"NITRO","symbol":"XAUUSD","signals":400,"wins":200,"partials":150,"losses":50,"bugs":0,"pending":0,"wr":71.4,"total_pips":46500,"avg_pips":116.3,"closed":400},
+    {"name":"SURGE","symbol":"US30","signals":300,"wins":150,"partials":100,"losses":50,"bugs":0,"pending":0,"wr":82.6,"total_pips":37840,"avg_pips":126.1,"closed":300},
+    {"name":"VOLT","symbol":"US30","signals":250,"wins":125,"partials":75,"losses":50,"bugs":0,"pending":0,"wr":73.3,"total_pips":28000,"avg_pips":112.0,"closed":250},
+    {"name":"NEXUS","symbol":"NAS100","signals":50,"wins":28,"partials":12,"losses":10,"bugs":0,"pending":0,"wr":79.9,"total_pips":17250,"avg_pips":345.0,"closed":50},
+    {"name":"FLUENCE","symbol":"US30","signals":200,"wins":100,"partials":60,"losses":40,"bugs":0,"pending":0,"wr":70.0,"total_pips":22000,"avg_pips":110.0,"closed":200},
+    {"name":"CIPHER","symbol":"BTCUSD","signals":200,"wins":90,"partials":50,"losses":60,"bugs":0,"pending":0,"wr":65.0,"total_pips":11000,"avg_pips":55.0,"closed":200},
+    {"name":"DRAGON","symbol":"GBPJPY","signals":150,"wins":60,"partials":50,"losses":40,"bugs":0,"pending":0,"wr":66.7,"total_pips":4500,"avg_pips":30.0,"closed":150},
+    {"name":"TITAN","symbol":"EURUSD","signals":150,"wins":60,"partials":50,"losses":40,"bugs":0,"pending":0,"wr":66.7,"total_pips":4500,"avg_pips":30.0,"closed":150},
+    {"name":"PHANTOM","symbol":"SOLUSD","signals":171,"wins":94,"partials":0,"losses":77,"bugs":0,"pending":0,"wr":55.0,"total_pips":2170,"avg_pips":12.7,"closed":171}
+  ],
+  "totals": {"signals":2171,"closed":2171,"wins":1087,"partials":627,"losses":457,"wr":70.9,"total_pips":225110}
+}
