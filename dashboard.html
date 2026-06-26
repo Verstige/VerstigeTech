@@ -158,8 +158,8 @@
 <script src="assets/site.js"></script>
 <script>
 const ENGINE_PREFIX = {
-  NITRO:['VST_','XAU','GOLD'], DRAGON:['GBPJPY'], TITAN:['EURUSD','EUR_'],
-  CIPHER:['CIPH_','BTC'], PHANTOM:['PHNTM','SOL'], NEXUS:['NAS','NDX','NEXUS'],
+  NITRO:['VST_'], DRAGON:['GBPJPY'], TITAN:['EURUSD'],
+  CIPHER:['CIPH_', 'BTCUSD_'], PHANTOM:['PHNTM_', 'SOLUSD_'], NEXUS:['NAS','NDX','NEXUS'],
   VOLTALITY:['VS_'], FLUENCE:['US30'],
 };
 let ACTIVE_FILTER = null;
@@ -354,7 +354,7 @@ function renderTG(){
 
 function renderFeed(){
   const tb = document.getElementById('feed-tbody');
-  let rows = DATA.feed.slice(0,50);
+  let rows = DATA.feed.slice(0,100);
   if(ACTIVE_FILTER){
     rows = rows.filter(f => engineFromSignalId(f.signal_id) === ACTIVE_FILTER);
   }
