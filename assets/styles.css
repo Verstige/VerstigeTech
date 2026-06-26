@@ -447,6 +447,134 @@ body{
 /* ── Charts (Chart.js theme) ──────────────────────────────────────── */
 canvas{max-width:100%}
 
+/* Doughnut chart container — needs position:relative for center label */
+.donut-wrap{position:relative;width:100%;height:100%;min-height:220px}
+
+/* ── New dashboard layout ─────────────────────────────────────────── */
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+  gap:14px;
+  margin-bottom:24px;
+}
+.kpi-card{
+  position:relative;
+  padding:18px 20px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  transition:border-color 0.2s ease;
+}
+.kpi-card:hover{border-color:var(--border-2)}
+.kpi-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity:0.6;
+}
+.kpi-card.gold::before{background:linear-gradient(90deg, transparent, var(--gold), transparent)}
+.kpi-card.emerald::before{background:linear-gradient(90deg, transparent, var(--emerald-2), transparent)}
+.kpi-card.red::before{background:linear-gradient(90deg, transparent, var(--red-2), transparent)}
+.kpi-card .label{
+  font-family:var(--font-mono);font-size:9px;color:var(--dim);
+  letter-spacing:0.15em;text-transform:uppercase;font-weight:600;
+  margin-bottom:8px;
+}
+.kpi-card .value{
+  font-family:var(--font-mono);font-size:24px;font-weight:600;
+  line-height:1;letter-spacing:-0.02em;color:var(--text);
+}
+.kpi-card .value.positive{color:var(--emerald-2)}
+.kpi-card .value.negative{color:var(--red-2)}
+.kpi-card .sub{
+  font-family:var(--font-mono);font-size:10px;color:var(--muted);
+  margin-top:6px;letter-spacing:0.05em;
+}
+
+/* Two-up grid for charts */
+.chart-grid-2{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(360px, 1fr));
+  gap:20px;margin-bottom:24px;
+}
+.chart-grid-3{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;margin-bottom:24px;
+}
+.chart-card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  position:relative;
+}
+.chart-card .chart-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.chart-card .chart-title{
+  font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  letter-spacing:0.15em;text-transform:uppercase;font-weight:600;
+}
+.chart-card .chart-sub{
+  font-family:var(--font-mono);font-size:11px;color:var(--muted);
+  margin-top:2px;
+}
+.chart-card .chart-meta{
+  font-family:var(--font-mono);font-size:11px;color:var(--muted);
+}
+.chart-canvas-wrap{
+  position:relative;
+  height:280px;
+  width:100%;
+}
+
+/* Engine contribution bars (used in legend area) */
+.contrib-list{
+  display:flex;flex-direction:column;gap:10px;
+  margin-top:16px;
+}
+.contrib-row{
+  display:grid;grid-template-columns:90px 1fr 70px;
+  align-items:center;gap:12px;
+  font-family:var(--font-mono);font-size:11px;
+}
+.contrib-row .name{color:var(--text);font-weight:600;letter-spacing:0.05em}
+.contrib-row .bar-wrap{
+  height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;
+}
+.contrib-row .bar{height:100%;border-radius:3px}
+.contrib-row .val{color:var(--muted);text-align:right;font-size:11px}
+.contrib-row .val.positive{color:var(--emerald-2)}
+.contrib-row .val.negative{color:var(--red-2)}
+
+/* Metric strip — compact alternative to KPIs */
+.metric-strip{
+  display:flex;gap:0;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  margin-bottom:24px;
+}
+.metric-strip .item{
+  flex:1;padding:18px 20px;
+  border-right:1px solid var(--border);
+  text-align:center;
+}
+.metric-strip .item:last-child{border-right:none}
+.metric-strip .item .v{
+  font-family:var(--font-mono);font-size:22px;font-weight:600;
+  line-height:1;letter-spacing:-0.02em;color:var(--text);
+}
+.metric-strip .item .l{
+  font-family:var(--font-mono);font-size:9px;color:var(--dim);
+  letter-spacing:0.15em;text-transform:uppercase;margin-top:6px;
+}
+@media(max-width:700px){
+  .metric-strip{flex-wrap:wrap}
+  .metric-strip .item{flex:0 0 50%;border-bottom:1px solid var(--border)}
+}
+
 /* ── Toast ────────────────────────────────────────────────────────── */
 .toast{
   position:fixed;bottom:24px;right:24px;

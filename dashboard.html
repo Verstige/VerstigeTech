@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta http-equiv="refresh" content="30" />
 <title>Live Dashboard · VerstigeTech</title>
 <link rel="stylesheet" href="assets/styles.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  /* Dashboard-specific overrides */
   .dash-layout{display:grid;grid-template-columns:280px 1fr;gap:24px;padding:24px 0}
   @media(max-width:1100px){.dash-layout{grid-template-columns:1fr}}
   .dash-side{display:flex;flex-direction:column;gap:12px;position:sticky;top:80px;align-self:start;max-height:calc(100vh - 100px);overflow-y:auto}
@@ -31,8 +29,6 @@
   .engine-row .meta{font-size:10px;color:var(--dim)}
   .engine-row .pid{font-size:9px;color:var(--dim);background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px;margin-left:4px}
   .engine-row .pid.down{background:rgba(239,68,68,0.15);color:var(--red-2)}
-  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
   .open-list{display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto;padding-right:8px}
   .open-item{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
   .open-item.filtered{border-color:var(--cyan);background:rgba(0,212,255,0.04)}
@@ -59,6 +55,14 @@
   .feed-table{font-family:var(--font-mono);font-size:12px}
   .pill-row{display:flex;align-items:center;gap:4px;justify-content:flex-end}
   .ts-h{margin-top:8px;color:var(--muted);font-size:13px}
+  .section-title{
+    font-family:var(--font-mono);font-size:10px;color:var(--dim);
+    letter-spacing:0.18em;text-transform:uppercase;font-weight:600;
+    margin-bottom:12px;display:flex;align-items:center;gap:10px;
+  }
+  .section-title::after{
+    content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border) 0%,transparent 100%);
+  }
 </style>
 </head>
 <body>
@@ -98,47 +102,115 @@
           <span style="font-family:var(--font-mono);font-size:12px;color:var(--text)" id="filter-state">All 9 engines</span>
         </div>
 
-        <!-- KPI strip -->
+        <!-- KPI strip (upgraded styling) -->
         <div class="kpi-grid">
-          <div class="kpi"><div class="kpi-label">Net Pips</div><div class="kpi-value" id="kpi-pips">—</div><div class="kpi-sub" id="kpi-pips-sub">—</div></div>
-          <div class="kpi emerald"><div class="kpi-label">Net P&amp;L</div><div class="kpi-value" id="kpi-usd">—</div><div class="kpi-sub">$1k acct · 1% risk</div></div>
-          <div class="kpi purple"><div class="kpi-label">Win Rate</div><div class="kpi-value" id="kpi-wr">—</div><div class="kpi-sub" id="kpi-wr-sub">—</div></div>
-          <div class="kpi gold"><div class="kpi-label">Open Trades</div><div class="kpi-value gold" id="kpi-open">—</div><div class="kpi-sub" id="kpi-open-sub">—</div></div>
-          <div class="kpi pink"><div class="kpi-label">Signals</div><div class="kpi-value cyan" id="kpi-signals">—</div><div class="kpi-sub" id="kpi-engines">9 engines</div></div>
+          <div class="kpi-card gold">
+            <div class="label">Net Pips</div>
+            <div class="value" id="kpi-pips">—</div>
+            <div class="sub" id="kpi-pips-sub">—</div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="label">Net P&amp;L</div>
+            <div class="value" id="kpi-usd">—</div>
+            <div class="sub">$1k acct · 1% risk</div>
+          </div>
+          <div class="kpi-card">
+            <div class="label">Win Rate</div>
+            <div class="value" id="kpi-wr">—</div>
+            <div class="sub" id="kpi-wr-sub">—</div>
+          </div>
+          <div class="kpi-card">
+            <div class="label">Open Trades</div>
+            <div class="value" id="kpi-open">—</div>
+            <div class="sub" id="kpi-open-sub">—</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="label">Signals / Engines</div>
+            <div class="value" id="kpi-signals">—</div>
+            <div class="sub" id="kpi-engines">9 engines active</div>
+          </div>
         </div>
 
-        <!-- Charts -->
-        <div class="dash-grid">
-          <div class="glass" style="padding:20px">
-            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Daily P&amp;L · Last 14d</div>
-            <canvas id="chart-daily" height="160"></canvas>
+        <!-- Section: Portfolio composition (2 pies) -->
+        <div class="section-title">PORTFOLIO COMPOSITION</div>
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Engine Contribution · Net Pips</div>
+                <div class="chart-sub">Share of total profit/loss by engine</div>
+              </div>
+              <div class="chart-meta" id="rank-meta">9 engines</div>
+            </div>
+            <div class="chart-canvas-wrap donut-wrap">
+              <canvas id="chart-rank"></canvas>
+            </div>
+            <div class="contrib-list" id="rank-contrib"></div>
           </div>
-          <div class="glass" style="padding:20px">
-            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Ranking · By Net Pips</div>
-            <canvas id="chart-rank" height="160"></canvas>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Win / Loss Split</div>
+                <div class="chart-sub">Distribution of closed trade outcomes</div>
+              </div>
+              <div class="chart-meta" id="wl-meta">— closed</div>
+            </div>
+            <div class="chart-canvas-wrap donut-wrap">
+              <canvas id="chart-wl"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Daily breakdown as pie -->
+        <div class="section-title">DAILY P&amp;L BREAKDOWN</div>
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Last 14d · By Day</div>
+                <div class="chart-sub">Each slice = one trading day (net pips)</div>
+              </div>
+              <div class="chart-meta" id="daily-meta">14 days</div>
+            </div>
+            <div class="chart-canvas-wrap donut-wrap">
+              <canvas id="chart-daily"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Open Trade Allocation</div>
+                <div class="chart-sub">Active positions grouped by engine</div>
+              </div>
+              <div class="chart-meta" id="open-meta">— open</div>
+            </div>
+            <div class="chart-canvas-wrap donut-wrap">
+              <canvas id="chart-open"></canvas>
+            </div>
           </div>
         </div>
 
         <!-- Open trades -->
-        <div class="glass" style="padding:24px">
+        <div class="section-title">OPEN TRADES</div>
+        <div class="chart-card">
           <div class="flex items-center justify-between mb-4">
-            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase">Open Trades</div>
-            <span id="open-count" class="muted small mono">—</span>
+            <div class="chart-meta" id="open-count">—</div>
           </div>
           <div class="open-list" id="open-list"></div>
         </div>
 
         <!-- Telegram health -->
-        <div class="glass" style="padding:24px">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">Telegram Health · Channel Routing &amp; Delivery</div>
-          <div class="tg-grid" id="tg-grid"></div>
-        </div>
+        <div class="section-title">TELEGRAM DELIVERY · CHANNEL ROUTING</div>
+        <div class="tg-grid" id="tg-grid"></div>
 
         <!-- Recent feed -->
-        <div class="glass" style="padding:0;overflow:hidden">
+        <div class="section-title">RECENT CLOSED TRADES</div>
+        <div class="chart-card" style="padding:0;overflow:hidden">
           <div style="padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:center">
-            <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase">Recent Closed Trades</div>
-            <span class="muted small mono" id="feed-count-label">LAST 100</span>
+            <div class="chart-meta">Closed trade ledger (newest first)</div>
+            <span class="muted small mono" id="feed-count-label">—</span>
           </div>
           <div style="max-height:480px;overflow-y:auto">
             <table class="data-table feed-table" style="border-radius:0">
@@ -163,7 +235,6 @@ const ENGINE_PREFIX = {
   VOLTALITY:['VS_'], FLUENCE:['US30'],
 };
 let ACTIVE_FILTER = null;
-let DAILY_CHART = null, RANK_CHART = null;
 
 function engineFromSignalId(sid){
   if(!sid) return null;
@@ -208,7 +279,6 @@ function render(){
 
   // Filter state
   const filterState = document.getElementById('filter-state');
-  const filterBar = document.getElementById('filter-bar');
   if(ACTIVE_FILTER){
     const e = DATA.engines.find(x=>x.name===ACTIVE_FILTER);
     filterState.innerHTML = `<span class="filter-active">${ACTIVE_FILTER} · ${e?.closed_trades||0} trades <button onclick="setFilter('${ACTIVE_FILTER}')">×</button></span>`;
@@ -221,12 +291,12 @@ function render(){
     const e = DATA.engines.find(x=>x.name===ACTIVE_FILTER);
     if(e){
       document.getElementById('kpi-pips').textContent = fmtPips(e.net_pips||0);
-      document.getElementById('kpi-pips').className = 'kpi-value ' + (e.net_pips>=0?'positive':'negative');
+      document.getElementById('kpi-pips').className = 'value ' + (e.net_pips>=0?'positive':'negative');
       document.getElementById('kpi-pips-sub').textContent = `${e.closed_trades||0} closed`;
       document.getElementById('kpi-usd').textContent = fmtUSD(e.net_dollars||0);
-      document.getElementById('kpi-usd').className = 'kpi-value ' + (e.net_dollars>=0?'positive':'negative');
+      document.getElementById('kpi-usd').className = 'value ' + (e.net_dollars>=0?'positive':'negative');
       document.getElementById('kpi-wr').textContent = fmtPct(e.win_rate||0);
-      document.getElementById('kpi-wr').className = 'kpi-value ' + (e.win_rate>=50?'positive':'negative');
+      document.getElementById('kpi-wr').className = 'value ' + (e.win_rate>=50?'positive':'negative');
       document.getElementById('kpi-wr-sub').textContent = `${e.wins||0}W / ${e.losses||0}L`;
       document.getElementById('kpi-open').textContent = e.open_trades||0;
       document.getElementById('kpi-open-sub').textContent = ACTIVE_FILTER + ' only';
@@ -236,22 +306,24 @@ function render(){
   } else {
     const t = DATA.totals;
     document.getElementById('kpi-pips').textContent = fmtPips(t.net_pips);
-    document.getElementById('kpi-pips').className = 'kpi-value ' + (t.net_pips>=0?'positive':'negative');
+    document.getElementById('kpi-pips').className = 'value ' + (t.net_pips>=0?'positive':'negative');
     document.getElementById('kpi-pips-sub').textContent = `${fmtNum(t.total_closed)} closed`;
     document.getElementById('kpi-usd').textContent = fmtUSD(t.net_dollars);
-    document.getElementById('kpi-usd').className = 'kpi-value ' + (t.net_dollars>=0?'positive':'negative');
+    document.getElementById('kpi-usd').className = 'value ' + (t.net_dollars>=0?'positive':'negative');
     document.getElementById('kpi-wr').textContent = fmtPct(t.win_rate);
-    document.getElementById('kpi-wr').className = 'kpi-value ' + (t.win_rate>=50?'positive':'negative');
+    document.getElementById('kpi-wr').className = 'value ' + (t.win_rate>=50?'positive':'negative');
     document.getElementById('kpi-wr-sub').textContent = `${fmtNum(t.total_wins)}W / ${fmtNum(t.total_losses)}L`;
     document.getElementById('kpi-open').textContent = fmtNum(t.total_open);
     document.getElementById('kpi-signals').textContent = fmtNum(t.total_signals);
     document.getElementById('kpi-engines').textContent = `${t.engines} engines active`;
   }
 
-  // Daily chart
-  renderDaily();
-  // Ranking
+  // Render all charts
   renderRank();
+  renderWLDoughnut();
+  renderDailyPie();
+  renderOpenPie();
+
   // Open trades
   renderOpen();
   // TG health
@@ -260,38 +332,123 @@ function render(){
   renderFeed();
 }
 
-function renderDaily(){
-  const ctx = document.getElementById('chart-daily').getContext('2d');
-  if(DAILY_CHART) DAILY_CHART.destroy();
-  const days = Object.keys(DATA.daily_pnl || {}).sort();
-  if(!days.length) return;
-  const datasets = ENGINES
-    .filter(([n]) => !ACTIVE_FILTER || ACTIVE_FILTER === n)
-    .map(([name,sym,label,color])=>({
-      label:name,
-      data:days.map(d => (DATA.daily_pnl[d] && DATA.daily_pnl[d][name]) ? DATA.daily_pnl[d][name].pips : 0),
-      backgroundColor:color, borderColor:color, stack:'pips',
-    }));
-  DAILY_CHART = new Chart(ctx,{type:'bar',data:{labels:days,datasets},
-    options:{animation:false,responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10},boxWidth:10}},
-        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)} pips`}}},
-      scales:{x:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9}},grid:{display:false}},
-        y:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
-}
-
+// ─── Engine contribution doughnut (with profit-bar legend) ────
 function renderRank(){
-  const ctx = document.getElementById('chart-rank').getContext('2d');
-  if(RANK_CHART) RANK_CHART.destroy();
   let ranked = [...DATA.engines].sort((a,b)=>b.net_pips-a.net_pips);
   if(ACTIVE_FILTER) ranked = ranked.filter(e=>e.name===ACTIVE_FILTER);
-  RANK_CHART = new Chart(ctx,{type:'bar',
-    data:{labels:ranked.map(e=>e.name),datasets:[{data:ranked.map(e=>e.net_pips),
-      backgroundColor:ranked.map(e=>e.net_pips>=0?'#10b981':'#ef4444'),borderRadius:4}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.x)+' pips'}}},
-      scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}}});
+  const labels = ranked.map(e=>e.name);
+  const values = ranked.map(e=>e.net_pips);
+  const colors = labels.map(l=>engineColor(l));
+
+  const totalAbs = values.reduce((s,v)=>s + Math.abs(v), 0);
+  const total = values.reduce((s,v)=>s + v, 0);
+
+  renderDoughnut('chart-rank', labels, values, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'NET PIPS',
+    centerValue: fmtPips(total),
+    centerSub: `${ranked.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const pct = totalAbs ? ((Math.abs(c.parsed) / totalAbs) * 100).toFixed(1) : '0';
+      const sign = vals[c.dataIndex] >= 0 ? '+' : '';
+      return `${c.label}: ${sign}${vals[c.dataIndex].toFixed(1)} pips (${pct}%)`;
+    },
+  });
+  document.getElementById('rank-meta').textContent = `${ranked.length} engines`;
+
+  // Contribution bars below
+  const max = Math.max(...values.map(v=>Math.abs(v)), 1);
+  document.getElementById('rank-contrib').innerHTML = ranked.map(e=>{
+    const color = engineColor(e.name);
+    const width = (Math.abs(e.net_pips) / max) * 100;
+    const isPos = e.net_pips >= 0;
+    return `<div class="contrib-row">
+      <span class="name" style="color:${color}">${e.name}</span>
+      <div class="bar-wrap"><div class="bar" style="width:${width}%;background:${color};opacity:${isPos?0.9:0.55}"></div></div>
+      <span class="val ${isPos?'positive':'negative'}">${fmtPips(e.net_pips||0)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── Win/Loss doughnut ────────────────────────────────────────
+function renderWLDoughnut(){
+  const feed = (DATA.feed || []).filter(f => f.status === 'closed' && f.outcome !== 'voided');
+  const scoped = ACTIVE_FILTER ? feed.filter(f => engineFromSignalId(f.signal_id) === ACTIVE_FILTER) : feed;
+  const wins   = scoped.filter(f => f.outcome === 'win').length;
+  const losses = scoped.filter(f => f.outcome === 'loss').length;
+  const total  = wins + losses;
+
+  renderDoughnut('chart-wl', ['Wins', 'Losses'], [wins, losses], ['#10b981', '#ef4444'], {
+    cutout: '65%',
+    legend: true,
+    legendPosition: 'bottom',
+    centerLabelText: 'WIN RATE',
+    centerValue: total > 0 ? ((wins/total)*100).toFixed(1)+'%' : '—',
+    centerSub: `${total} closed`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+      return `${c.label}: ${vals[c.dataIndex]} (${pct}%)`;
+    },
+  });
+  document.getElementById('wl-meta').textContent = `${total} closed`;
+}
+
+// ─── Daily P&L as pie (each slice = one day) ─────────────────
+function renderDailyPie(){
+  const daily = DATA.daily_pnl || {};
+  const days = Object.keys(daily).sort();
+  if(!days.length){
+    renderDoughnut('chart-daily', ['No data'], [1], ['#1f2937'], {centerLabelText:'PIPS',centerValue:'0',centerSub:'no data'});
+    return;
+  }
+  const scoped = ACTIVE_FILTER ? days.filter(d => daily[d][ACTIVE_FILTER]) : days;
+  // Sum each day's net pips across the filtered engines
+  const dayVals = scoped.map(d => {
+    if(ACTIVE_FILTER) return daily[d][ACTIVE_FILTER]?.pips || 0;
+    return Object.values(daily[d]).reduce((s,v)=>s + (v.pips||0), 0);
+  });
+  const labels = scoped.map(d => {
+    const dt = new Date(d);
+    return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  });
+  const colors = dayVals.map(v => v >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)');
+
+  const total = dayVals.reduce((s,v)=>s+v, 0);
+  renderDoughnut('chart-daily', labels, dayVals.map(Math.abs), colors, {
+    cutout: '55%',
+    legendPosition: 'right',
+    centerLabelText: '14-DAY TOTAL',
+    centerValue: fmtPips(total),
+    centerSub: `${scoped.length} days`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const sign = dayVals[c.dataIndex] >= 0 ? '+' : '−';
+      return `${c.label}: ${sign}${Math.abs(dayVals[c.dataIndex]).toFixed(1)} pips`;
+    },
+  });
+  document.getElementById('daily-meta').textContent = `${scoped.length} days`;
+}
+
+// ─── Open trades allocation ──────────────────────────────────
+function renderOpenPie(){
+  const open = DATA.open_trades || [];
+  const scoped = ACTIVE_FILTER ? open.filter(t => t.engine === ACTIVE_FILTER) : open;
+  const counts = {};
+  scoped.forEach(t => { counts[t.engine] = (counts[t.engine] || 0) + 1; });
+  const labels = Object.keys(counts);
+  const values = labels.map(l => counts[l]);
+  const colors = labels.map(l => engineColor(l));
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-open', labels, values, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'OPEN POSITIONS',
+    centerValue: total,
+    centerSub: `${labels.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>`${c.label}: ${vals[c.dataIndex]} open`,
+  });
+  document.getElementById('open-meta').textContent = `${total} open`;
 }
 
 function renderOpen(){
@@ -354,7 +511,7 @@ function renderTG(){
 
 function renderFeed(){
   const tb = document.getElementById('feed-tbody');
-  let rows = DATA.feed.slice(0,100);
+  let rows = (DATA.feed || []).filter(f => f.status === 'closed').slice(0,100);
   if(ACTIVE_FILTER){
     rows = rows.filter(f => engineFromSignalId(f.signal_id) === ACTIVE_FILTER);
   }
@@ -375,6 +532,7 @@ function renderFeed(){
       <td class="muted small">${fmtTime(t.closed_at)}</td>
     </tr>`;
   }).join('');
+  document.getElementById('feed-count-label').textContent = `${rows.length} TRADES`;
 }
 
 document.addEventListener('click', e=>{
