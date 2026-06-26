@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-26T17:36:13.385121+00:00",
+  "generated_at": "2026-06-26T17:42:14.354854+00:00",
   "totals": {
     "engines": 9,
-    "total_signals": 621,
+    "total_signals": 622,
     "total_open": 52,
     "total_closed": 48,
     "total_wins": 27,
@@ -46,7 +46,7 @@
     {
       "name": "SURGE",
       "symbol": "US30",
-      "total_signals": 571,
+      "total_signals": 572,
       "open_trades": 0,
       "closed_trades": 0,
       "wins": 0,
@@ -57,7 +57,7 @@
       "best_trade": 0.0,
       "worst_trade": 0.0,
       "net_dollars": 0.0,
-      "last_signal_ts": "2026-06-26T00:20:27.871795+00:00",
+      "last_signal_ts": "2026-06-26T17:37:14.878666+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [],
@@ -3408,8 +3408,8 @@
       "symbol": "US30",
       "color": "#3b82f6",
       "label": "US30 Momentum",
-      "last_signal_ts": "2026-06-26T00:20:27.871795+00:00",
-      "total_signals": 571,
+      "last_signal_ts": "2026-06-26T17:37:14.878666+00:00",
+      "total_signals": 572,
       "open_trades": 0
     },
     {
