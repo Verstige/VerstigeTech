@@ -76,8 +76,8 @@
 <script src="assets/site.js"></script>
 <script>
 const ENGINE_PREFIX = {
-  NITRO:['VST_','XAU','GOLD'], DRAGON:['GBPJPY'], TITAN:['EURUSD','EUR_'],
-  CIPHER:['CIPH_','BTC'], PHANTOM:['PHNTM','SOL'], NEXUS:['NAS','NDX','NEXUS'],
+  NITRO:['VST_'], DRAGON:['GBPJPY'], TITAN:['EURUSD'],
+  CIPHER:['CIPH_', 'BTCUSD_'], PHANTOM:['PHNTM_', 'SOLUSD_'], NEXUS:['NAS','NDX','NEXUS'],
   VOLTALITY:['VS_'], FLUENCE:['US30'],
 };
 function engineFromSignalId(sid){
@@ -107,9 +107,15 @@ function render(){
   if(!DATA) return;
 
   // Engine filter chips
-  const ef = document.getElementById('engine-filters');
-  ef.innerHTML = `<div class="filter-chip active" data-engine="">ALL</div>` +
-    ENGINES.map(([n])=>`<div class="filter-chip" data-engine="${n}">${n}</div>`).join('');
+  // Engine filter chips — show count per engine
+    const counts = {};
+    for(const f of DATA.feed){
+      const e = engineFromSignalId(f.signal_id) || 'unknown';
+      counts[e] = (counts[e]||0)+1;
+    }
+    const totalCount = DATA.feed.length;
+    ef.innerHTML = `<div class="filter-chip active" data-engine="">ALL <span class="muted">· ${totalCount}</span></div>` +
+      ENGINES.map(([n])=>`<div class="filter-chip" data-engine="${n}">${n} <span class="muted">· ${counts[n]||0}</span></div>`).join('');
 
   // Headers
   document.getElementById('log-thead').innerHTML = COLS.map(c=>

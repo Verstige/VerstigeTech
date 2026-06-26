@@ -184,30 +184,35 @@ def fetch_engine_stats(cur, name, sig_table, act_table, symbol):
             pass
 
     # ── Closed trades: pull ALL outcomes and route by signal_id prefix ──
-    # Build the engine's signal_id prefix list
+    # Build the engine's signal_id prefix list. NOTE: VST_ (NITRO, length 4) and
+    # VS_ (VOLTALITY, length 3) are DISTINCT prefixes — don't mix them up.
     prefix_map = {
-        "NITRO":     ["VST_", "XAU", "GOLD"],
+        "NITRO":     ["VST_"],
         "SURGE":     [],   # SURGE doesn't write to trade_outcomes (canonical conflict)
         "DRAGON":    ["GBPJPY"],
-        "TITAN":     ["EURUSD", "EUR_"],
-        "CIPHER":    ["CIPH_", "BTC"],
-        "PHANTOM":   ["SOL"],
+        "TITAN":     ["EURUSD"],
+        "CIPHER":    ["CIPH_", "BTCUSD_"],
+        "PHANTOM":   ["PHNTM_", "SOLUSD_"],
         "NEXUS":     ["NAS", "NDX", "NEXUS"],
         "VOLTALITY": ["VS_"],
         "FLUENCE":   ["US30"],
     }
     prefixes = prefix_map.get(name, [])
 
+    # Note: per-engine stats filter out pre-fix trades (before 2026-06-12) since
+    # those had a known same-candle bug. The full feed still includes them so
+    # the tradelog shows complete history — but per-engine stats stay clean.
+    cutoff = '2026-06-12'
+
     try:
         if prefixes:
-            # Build WHERE clause with LIKE for each prefix
             where_parts = " OR ".join([f"o.signal_id LIKE '{p}%'" for p in prefixes])
             cur.execute(f'''
                 SELECT o.signal_id, o.outcome, o.net_pips, o.exit_price,
                        o.closed_at, o.tp_hit, o.sl_hit
                 FROM trade_outcomes o
                 WHERE ({where_parts})
-                  AND o.closed_at > '2026-06-12'
+                  AND o.closed_at > '{cutoff}'
                 ORDER BY o.closed_at DESC
             ''')
         else:
@@ -293,13 +298,21 @@ def build_daily_pnl(cur, days=14):
     return daily
 
 
-def build_feed(cur, limit=50):
-    """Latest closed trades across all engines."""
+def build_feed(cur, limit=200):
+    """Latest closed trades across all engines.
+
+    Note: limit is intentionally high (200) so we don't silently truncate
+    when daily volume grows past 50. The tradelog.html page handles its
+    own client-side pagination/filtering.
+
+    Includes ALL closed trades regardless of date — the tradelog is meant
+    to be a complete historical ledger. Per-engine stats still filter
+    out pre-fix trades (before 2026-06-12) to avoid the same-candle bug.
+    """
     cur.execute(f'''
         SELECT o.signal_id, o.outcome, o.net_pips, o.closed_at,
                o.tp_hit, o.sl_hit, o.duration_minutes
         FROM trade_outcomes o
-        WHERE o.closed_at > '2026-06-12'
         ORDER BY o.closed_at DESC
         LIMIT ?
     ''', (limit,))
@@ -359,11 +372,11 @@ def build_telegram_health(cur):
     health = []
     # Map engine → signal_id prefix list (same as prefix_map in fetch_engine_stats)
     prefix_map = {
-        "NITRO":     ["VST_", "XAU", "GOLD"],
+        "NITRO":     ["VST_"],
         "DRAGON":    ["GBPJPY"],
-        "TITAN":     ["EURUSD", "EUR_"],
-        "CIPHER":    ["CIPH_", "BTC"],
-        "PHANTOM":   ["PHNTM", "SOL"],
+        "TITAN":     ["EURUSD"],
+        "CIPHER":    ["CIPH_", "BTCUSD_"],
+        "PHANTOM":   ["PHNTM_", "SOLUSD_"],
         "NEXUS":     ["NAS", "NDX", "NEXUS"],
         "VOLTALITY": ["VS_"],
         "FLUENCE":   ["US30"],
