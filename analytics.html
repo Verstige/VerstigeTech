@@ -20,11 +20,15 @@
 </head>
 <body>
 <div class="app">
-  <section class="page-hero" style="padding:60px 0 30px">
+  <section class="page-hero">
     <div class="container">
       <span class="eyebrow purple">ANALYTICS</span>
       <h1>The numbers, <span class="gradient-text">unmasked.</span></h1>
-      <p>Win rate, P&amp;L over time, and per-engine breakdowns — every metric that matters.</p>
+      <p>Win rate, profit factor, cumulative P&amp;L, and per-engine breakdowns — every metric that matters, sliced by engine.</p>
+      <div class="hero-meta">
+        <span class="live-pill">LIVE</span>
+        <span>Last update: <strong id="hero-update">—</strong></span>
+      </div>
     </div>
   </section>
 
@@ -157,6 +161,8 @@ function engineFromSignalId(sid){
 
 function render(){
   if(!DATA) return;
+  const hero = document.getElementById('hero-update');
+  if(hero) hero.textContent = new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
   const t = DATA.totals;
   document.getElementById('a-closed').textContent = fmtNum(t.total_closed);

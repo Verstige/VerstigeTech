@@ -29,7 +29,9 @@
   .engine-row .meta{font-size:10px;color:var(--dim)}
   .engine-row .pid{font-size:9px;color:var(--dim);background:rgba(0,0,0,0.3);padding:1px 4px;border-radius:3px;margin-left:4px}
   .engine-row .pid.down{background:rgba(239,68,68,0.15);color:var(--red-2)}
-  .open-list{display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto;padding-right:8px}
+  .open-list{display:flex;flex-direction:column;gap:8px;max-height:520px;overflow-y:auto;padding-right:8px}
+.open-list::-webkit-scrollbar{width:6px}
+.open-list::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
   .open-item{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
   .open-item.filtered{border-color:var(--cyan);background:rgba(0,212,255,0.04)}
   .open-item.dimmed{opacity:0.35}
@@ -275,25 +277,29 @@ function render(){
 
   // Sidebar engine list
   const list = document.getElementById('engine-list');
+  const tgByEngine = {};
+  (DATA.telegram_health || []).forEach(t => tgByEngine[t.engine] = t);
+
   list.innerHTML = ENGINES.map(([n,sym,label,color])=>{
     const e = DATA.engines.find(x=>x.name===n) || {};
     const ph = (DATA.process_health||{})[n] || {};
+    const tg = tgByEngine[n] || {};
     const proc = ph.running;
     const filtered = ACTIVE_FILTER === n;
     const dimmed = ACTIVE_FILTER && !filtered;
     const pid = (ph.pids && ph.pids[0]) ? ph.pids[0].slice(-4) : '—';
+    const pips = e.net_pips || 0;
+    const metaClass = pips > 0 ? 'positive' : pips < 0 ? 'negative' : '';
     return `<div class="engine-row ${filtered?'filtered':''} ${dimmed?'dimmed':''}" data-engine="${n}">
-      <span class="dot" style="background:${color};${(e.open_trades||0)>0?'box-shadow:0 0 6px '+color:''}"></span>
+      <span class="dot ${proc?'live':''}" style="background:${color};color:${color}"></span>
       <span class="name">${n}</span>
-      <span class="meta">${e.closed_trades||0}·${(e.net_pips||0)>=0?'+':''}${(e.net_pips||0).toFixed(0)}</span>
+      <span class="meta ${metaClass}">${e.closed_trades||0}·${pips>=0?'+':''}${pips.toFixed(0)}</span>
       <span class="pid ${proc?'':'down'}">${pid}</span>
     </div>`;
   }).join('');
 
   // Process status
   const ps = document.getElementById('process-status');
-  const running = Object.entries(DATA.process_health||{}).filter(([,v])=>v.running).length;
-  const total = Object.keys(DATA.process_health||{}).length;
   ps.innerHTML = `<div style="display:flex;justify-content:space-between"><span>Live:</span><strong style="color:var(--emerald-2)">${running}/${total}</strong></div>
   <div style="display:flex;justify-content:space-between"><span>Updated:</span><strong>${new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</strong></div>`;
 

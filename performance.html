@@ -36,11 +36,15 @@
 </head>
 <body>
 <div class="app">
-  <section class="page-hero" style="padding:60px 0 30px">
+  <section class="page-hero">
     <div class="container">
       <span class="eyebrow gold">PERFORMANCE</span>
       <h1>Per-strategy, <span class="gradient-text">deconstructed.</span></h1>
-      <p>Best trade, worst trade, average win, average loss — every metric that drives the next iteration.</p>
+      <p>Best trade, worst trade, average win, average loss, payoff ratio — every metric that drives the next iteration.</p>
+      <div class="hero-meta">
+        <span class="live-pill">LIVE</span>
+        <span>Last update: <strong id="hero-update">—</strong></span>
+      </div>
     </div>
   </section>
 
@@ -142,6 +146,8 @@ function engineFromSignalId(sid){
 
 function render(){
   if(!DATA) return;
+  const hero = document.getElementById('hero-update');
+  if(hero) hero.textContent = new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
   const feed = (DATA.feed || []).filter(f => f.status === 'closed');
   const wins = feed.filter(f=>f.net_pips>0);

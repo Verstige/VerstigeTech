@@ -25,11 +25,15 @@
 </head>
 <body>
 <div class="app">
-  <section class="page-hero" style="padding:60px 0 30px">
+  <section class="page-hero">
     <div class="container">
       <span class="eyebrow green">BACKTESTS</span>
       <h1>Historical <span class="gradient-text">edge, proven.</span></h1>
       <p>7d / 30d / 60d / 90d performance across the fleet. All windows use 5-minute candle data (except 90d which uses daily due to Yahoo Finance API limits).</p>
+      <div class="hero-meta">
+        <span class="live-pill">LIVE</span>
+        <span>Last update: <strong id="hero-update">—</strong></span>
+      </div>
     </div>
   </section>
 
@@ -157,6 +161,8 @@ async function loadWindow(w){
 
 function render(){
   if(!BT_DATA) return;
+  const hero = document.getElementById('hero-update');
+  if(hero && BT_DATA.generated_at) hero.textContent = new Date(BT_DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
   // KPIs
   const t = BT_DATA.totals;

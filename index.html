@@ -15,18 +15,22 @@
 <div class="app">
 
   <!-- ─── HERO ─────────────────────────────────────────────── -->
-  <section class="page-hero">
+  <section class="page-hero" style="text-align:center;padding:80px 0 40px">
     <div class="container">
       <span class="eyebrow">LIVE SIGNAL INTELLIGENCE</span>
       <h1>
         Nine Engines. <span class="gradient-text">One Mission.</span><br/>
         Live Performance, Decoded.
       </h1>
-      <p>
+      <p style="margin:0 auto">
         VerstigeTech aggregates every signal, every fill, every pip across
         our 9-engine trading fleet — and surfaces it in a single, beautiful,
         glass-dark analytics experience.
       </p>
+      <div class="hero-meta" style="justify-content:center">
+        <span class="live-pill" id="hero-live">LIVE</span>
+        <span>Last update: <strong id="hero-update">—</strong></span>
+      </div>
       <div class="flex items-center justify-center gap-3 mt-8">
         <a href="dashboard.html" class="btn btn-primary">View Live Dashboard →</a>
         <a href="strategies.html" class="btn btn-ghost">Explore Strategies</a>
@@ -132,6 +136,17 @@ let DAILY_CHART = null;
 
 function render(){
   if(!DATA) return;
+
+  // Hero meta
+  const running = Object.entries(DATA.process_health||{}).filter(([,v])=>v.running).length;
+  const total = Object.keys(DATA.process_health||{}).length;
+  document.getElementById('hero-update').textContent = new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const livePill = document.getElementById('hero-live');
+  if(livePill){
+    livePill.textContent = running === total ? 'ALL SYSTEMS LIVE' : running === 0 ? 'ALL DOWN' : `${running}/${total} LIVE`;
+    livePill.classList.toggle('stale', running < total && running > 0);
+    livePill.classList.toggle('off', running === 0);
+  }
 
   // KPIs
   const t = DATA.totals;
