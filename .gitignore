@@ -1,6 +1,3 @@
-# VerstigeTech — things that shouldn't be in the repo
-data/dashboard.json
-data/refresh.log
 .gh-pages-worktree/
 __pycache__/
 *.pyc
