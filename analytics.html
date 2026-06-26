@@ -183,7 +183,7 @@ function renderCurve(){
       backgroundColor:'rgba(0,212,255,0.1)',
       fill:true,tension:0.3,pointRadius:0,borderWidth:2,
     }]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{animation:false,responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.y)+' pips cumulative'}}},
       scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9},maxTicksLimit:10},grid:{display:false}},
         y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
