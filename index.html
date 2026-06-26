@@ -15,18 +15,22 @@
 <div class="app">
 
   <!-- ─── HERO ─────────────────────────────────────────────── -->
-  <section class="page-hero">
+  <section class="page-hero" style="text-align:center;padding:80px 0 40px">
     <div class="container">
       <span class="eyebrow">LIVE SIGNAL INTELLIGENCE</span>
       <h1>
         Nine Engines. <span class="gradient-text">One Mission.</span><br/>
         Live Performance, Decoded.
       </h1>
-      <p>
+      <p style="margin:0 auto">
         VerstigeTech aggregates every signal, every fill, every pip across
         our 9-engine trading fleet — and surfaces it in a single, beautiful,
         glass-dark analytics experience.
       </p>
+      <div class="hero-meta" style="justify-content:center">
+        <span class="live-pill" id="hero-live">LIVE</span>
+        <span>Last update: <strong id="hero-update">—</strong></span>
+      </div>
       <div class="flex items-center justify-center gap-3 mt-8">
         <a href="dashboard.html" class="btn btn-primary">View Live Dashboard →</a>
         <a href="strategies.html" class="btn btn-ghost">Explore Strategies</a>
@@ -38,30 +42,30 @@
   <section class="section" style="padding-top:20px">
     <div class="container">
       <div class="kpi-grid">
-        <div class="kpi">
-          <div class="kpi-label">Net Pips</div>
-          <div class="kpi-value positive" id="kpi-pips">—</div>
-          <div class="kpi-sub" id="kpi-pips-sub">across all engines</div>
+        <div class="kpi-card">
+          <div class="label">Net Pips</div>
+          <div class="value positive" id="kpi-pips">—</div>
+          <div class="sub" id="kpi-pips-sub">across all engines</div>
         </div>
-        <div class="kpi emerald">
-          <div class="kpi-label">Net P&amp;L</div>
-          <div class="kpi-value" id="kpi-usd">—</div>
-          <div class="kpi-sub">$1,000 acct · 1% risk</div>
+        <div class="kpi-card emerald">
+          <div class="label">Net P&amp;L</div>
+          <div class="value" id="kpi-usd">—</div>
+          <div class="sub">$1,000 acct · 1% risk</div>
         </div>
-        <div class="kpi purple">
-          <div class="kpi-label">Win Rate</div>
-          <div class="kpi-value" id="kpi-wr">—</div>
-          <div class="kpi-sub" id="kpi-wr-sub">— wins / — losses</div>
+        <div class="kpi-card purple">
+          <div class="label">Win Rate</div>
+          <div class="value" id="kpi-wr">—</div>
+          <div class="sub" id="kpi-wr-sub">— wins / — losses</div>
         </div>
-        <div class="kpi gold">
-          <div class="kpi-label">Open Trades</div>
-          <div class="kpi-value gold" id="kpi-open">—</div>
-          <div class="kpi-sub">live across the fleet</div>
+        <div class="kpi-card gold">
+          <div class="label">Open Trades</div>
+          <div class="value gold" id="kpi-open">—</div>
+          <div class="sub">live across the fleet</div>
         </div>
-        <div class="kpi pink">
-          <div class="kpi-label">Signals Fired</div>
-          <div class="kpi-value cyan" id="kpi-signals">—</div>
-          <div class="kpi-sub">all-time across 9 engines</div>
+        <div class="kpi-card pink">
+          <div class="label">Signals Fired</div>
+          <div class="value cyan" id="kpi-signals">—</div>
+          <div class="sub">all-time across 9 engines</div>
         </div>
       </div>
     </div>
@@ -132,6 +136,17 @@ let DAILY_CHART = null;
 
 function render(){
   if(!DATA) return;
+
+  // Hero meta
+  const running = Object.entries(DATA.process_health||{}).filter(([,v])=>v.running).length;
+  const total = Object.keys(DATA.process_health||{}).length;
+  document.getElementById('hero-update').textContent = new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const livePill = document.getElementById('hero-live');
+  if(livePill){
+    livePill.textContent = running === total ? 'ALL SYSTEMS LIVE' : running === 0 ? 'ALL DOWN' : `${running}/${total} LIVE`;
+    livePill.classList.toggle('stale', running < total && running > 0);
+    livePill.classList.toggle('off', running === 0);
+  }
 
   // KPIs
   const t = DATA.totals;

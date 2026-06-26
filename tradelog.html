@@ -101,16 +101,16 @@
 </head>
 <body>
 <div class="app">
-  <section class="page-hero" style="padding:60px 0 30px">
+  <section class="page-hero">
     <div class="container">
       <span class="eyebrow green">TRADE LOG</span>
       <h1>Every trade. <span class="gradient-text">Every detail.</span></h1>
-      <p>Complete ledger of all closed + open trades across all 9 engines. Live data, auto-refreshing every 30s.</p>
-      <div class="refresh-info" style="margin-top:12px">
-        <span class="live-dot" id="live-dot"></span>
-        <span>LIVE · auto-refreshes every <strong>30s</strong></span>
-        <span style="margin-left:12px">·</span>
-        <span style="margin-left:12px">Last update: <strong id="last-update">—</strong></span>
+      <p>Complete ledger of all closed + open trades across all 9 engines. Searchable, sortable, filterable. Live data, auto-refreshing.</p>
+      <div class="hero-meta">
+        <span class="live-pill" id="hero-live">LIVE</span>
+        <span>Last update: <strong id="last-update">—</strong></span>
+        <span>·</span>
+        <span><strong id="hero-count">—</strong> trades</span>
       </div>
     </div>
   </section>
@@ -563,6 +563,12 @@ document.getElementById('table-wrap').addEventListener('scroll', e=>{
 
 window.onDataReady = () => {
   ALL_ROWS = buildRows();
+  const heroCount = document.getElementById('hero-count');
+  if(heroCount) heroCount.textContent = DATA.feed_totals ? fmtNum(DATA.feed_totals.total) : fmtNum(ALL_ROWS.length);
+  const livePill = document.getElementById('hero-live');
+  if(livePill){
+    livePill.textContent = 'LIVE';
+  }
   render();
   startAutoRefresh();
   document.getElementById('last-update').textContent = new Date().toLocaleTimeString();

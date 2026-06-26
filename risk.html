@@ -83,11 +83,15 @@
 </head>
 <body>
 <div class="app">
-  <section class="page-hero" style="padding:60px 0 30px">
+  <section class="page-hero">
     <div class="container">
       <span class="eyebrow" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:var(--red-2)">RISK</span>
       <h1>Risk <span class="gradient-text">exposed.</span></h1>
-      <p>Drawdown, exposure, correlation, max consecutive losses — every metric that keeps us honest.</p>
+      <p>Drawdown, exposure, correlation, max consecutive losses — every metric that keeps us honest. Includes a built-in Risk Calculator.</p>
+      <div class="hero-meta">
+        <span class="live-pill">LIVE</span>
+        <span>Last update: <strong id="hero-update">—</strong></span>
+      </div>
     </div>
   </section>
 
@@ -299,6 +303,8 @@ const CALC = {
 
 function render(){
   if(!DATA) return;
+  const hero = document.getElementById('hero-update');
+  if(hero) hero.textContent = new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const feed = (DATA.feed || []).filter(f => f.status === 'closed');
 
   // Sort by closed_at
