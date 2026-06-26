@@ -273,7 +273,7 @@ function renderDaily(){
       backgroundColor:color, borderColor:color, stack:'pips',
     }));
   DAILY_CHART = new Chart(ctx,{type:'bar',data:{labels:days,datasets},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{animation:false,responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10},boxWidth:10}},
         tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)} pips`}}},
       scales:{x:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9}},grid:{display:false}},
@@ -288,7 +288,7 @@ function renderRank(){
   RANK_CHART = new Chart(ctx,{type:'bar',
     data:{labels:ranked.map(e=>e.name),datasets:[{data:ranked.map(e=>e.net_pips),
       backgroundColor:ranked.map(e=>e.net_pips>=0?'#10b981':'#ef4444'),borderRadius:4}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.x)+' pips'}}},
       scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
         y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}}});

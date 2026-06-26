@@ -117,7 +117,7 @@ function render(){
       backgroundColor:ranked.map(e=>e.total_pips>=0?'#10b981':'#ef4444'),
       borderRadius:6,
     }]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.x)+' pips'}}},
       scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
         y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:11}},grid:{display:false}}}}});

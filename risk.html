@@ -193,7 +193,7 @@ function render(){
       {label:'Equity (pips)',data:equity.slice().reverse(),borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2,yAxisID:'y'},
       {label:'Drawdown',data:drawdown.slice().reverse(),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2,yAxisID:'y'},
     ]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
       plugins:{legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}}},
         tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)}`}}},
       scales:{

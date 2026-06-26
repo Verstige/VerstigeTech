@@ -131,7 +131,7 @@ function render(){
       borderColor:labels.map(l=>l>=0?'#10b981':'#ef4444'),
       borderWidth:1,borderRadius:4,
     }]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{animation:false,responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label} pips: ${c.parsed.y} trades`}}},
       scales:{x:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10},maxRotation:45},grid:{display:false}},
         y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
