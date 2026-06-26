@@ -122,38 +122,46 @@ function renderDoughnut(canvasId, labels, values, colors, opts={}){
     }
   });
 
-  // Center metric label (HTML overlay)
+  // Center metric label (HTML overlay) — positioned over the chart area only,
+  // not the legend. We account for legend position by offsetting the center.
   if(opts.centerLabel !== false){
     const wrapper = ctx.parentElement;
-    if(wrapper && !wrapper.querySelector('.donut-center')){
-      const center = document.createElement('div');
-      center.className = 'donut-center';
-      center.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;text-align:center';
+    if(wrapper){
+      // Position center label at the doughnut's actual center.
+      // For legends on right/bottom, the chart area is reduced accordingly.
+      let centerLeft = '50%';
+      let centerTop = '50%';
+      let chartAreaPct = 100;
+      if(opts.legendPosition === 'right'){
+        // Approximate: legend takes ~30% width on right. Chart centered at ~35%.
+        centerLeft = '38%';
+        chartAreaPct = 70;
+      } else if(opts.legendPosition === 'bottom'){
+        centerTop = '42%';  // shift up to leave room for legend
+      }
+      let center = wrapper.querySelector('.donut-center');
+      if(!center){
+        center = document.createElement('div');
+        center.className = 'donut-center';
+        wrapper.appendChild(center);
+      }
+      // Reset and rebuild content
+      center.innerHTML = '';
       const labelEl = document.createElement('div');
       labelEl.className = 'donut-center-label';
-      labelEl.style.cssText = 'font-family:var(--font-mono);font-size:9px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px';
       labelEl.textContent = opts.centerLabelText || 'TOTAL';
       const valueEl = document.createElement('div');
       valueEl.className = 'donut-center-value';
-      valueEl.style.cssText = 'font-family:var(--font-mono);font-size:22px;font-weight:600;line-height:1;letter-spacing:-0.02em';
       valueEl.textContent = opts.centerValue !== undefined ? opts.centerValue : fmtPips(dataValues.reduce((a,b)=>a+b,0));
       const subEl = document.createElement('div');
       subEl.className = 'donut-center-sub';
-      subEl.style.cssText = 'font-family:var(--font-mono);font-size:10px;color:var(--muted);margin-top:4px';
       subEl.textContent = opts.centerSub || '';
       center.appendChild(labelEl);
       center.appendChild(valueEl);
       center.appendChild(subEl);
+      // Apply positioning styles
+      center.style.cssText = `position:absolute;left:${centerLeft};top:${centerTop};transform:translate(-50%,-50%);pointer-events:none;text-align:center;width:${chartAreaPct}%`;
       if(getComputedStyle(wrapper).position === 'static') wrapper.style.position = 'relative';
-      wrapper.appendChild(center);
-    } else if(wrapper){
-      // Update existing
-      const center = wrapper.querySelector('.donut-center');
-      if(center){
-        center.querySelector('.donut-center-label').textContent = opts.centerLabelText || 'TOTAL';
-        center.querySelector('.donut-center-value').textContent = opts.centerValue !== undefined ? opts.centerValue : fmtPips(dataValues.reduce((a,b)=>a+b,0));
-        center.querySelector('.donut-center-sub').textContent = opts.centerSub || '';
-      }
     }
   }
 

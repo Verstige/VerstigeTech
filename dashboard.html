@@ -68,13 +68,21 @@
 <body>
 
 <div class="app">
-  <section style="padding:40px 0 0">
+  <section class="page-hero">
     <div class="container">
       <span class="eyebrow">LIVE</span>
-      <h1 style="font-size:clamp(28px,4vw,44px);font-weight:700;margin:12px 0 8px;letter-spacing:-0.02em">
+      <h1>
         Live <span class="gradient-text">Trading Dashboard</span>
       </h1>
-      <p class="ts-h">Click any engine to filter everything. Click again to clear.</p>
+      <p>Real-time P&L, open positions, and Telegram delivery health across all 9 trading engines. Click any engine to filter everything.</p>
+      <div class="hero-meta">
+        <span class="live-pill" id="hero-live">LIVE</span>
+        <span>Last update: <strong id="hero-update">—</strong></span>
+        <span>·</span>
+        <span><strong id="hero-engines-count">9</strong> engines running</span>
+        <span>·</span>
+        <span><strong id="hero-refresh">30s</strong> auto-refresh</span>
+      </div>
     </div>
   </section>
 
@@ -252,6 +260,18 @@ function setFilter(name){
 
 function render(){
   if(!DATA) return;
+
+  // Hero meta
+  const running = Object.entries(DATA.process_health||{}).filter(([,v])=>v.running).length;
+  const total = Object.keys(DATA.process_health||{}).length;
+  document.getElementById('hero-update').textContent = new Date(DATA.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('hero-engines-count').textContent = `${running}/${total}`;
+  const livePill = document.getElementById('hero-live');
+  if(livePill){
+    livePill.textContent = running === total ? 'ALL SYSTEMS LIVE' : running === 0 ? 'ALL DOWN' : `${running}/${total} LIVE`;
+    livePill.classList.toggle('stale', running < total && running > 0);
+    livePill.classList.toggle('off', running === 0);
+  }
 
   // Sidebar engine list
   const list = document.getElementById('engine-list');
