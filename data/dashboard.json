@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-06-26T16:18:06.112081+00:00",
+  "generated_at": "2026-06-26T16:24:05.698597+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 621,
     "total_open": 52,
-    "total_closed": 47,
+    "total_closed": 48,
     "total_wins": 27,
-    "total_losses": 20,
-    "win_rate": 57.4,
-    "net_pips": 2883.5,
-    "net_dollars": -49.67,
+    "total_losses": 21,
+    "win_rate": 56.2,
+    "net_pips": 2683.5,
+    "net_dollars": -59.67,
     "account_size": 1000.0,
     "risk_per_trade": 10.0
   },
@@ -343,15 +343,15 @@
       "symbol": "US30",
       "total_signals": 0,
       "open_trades": 27,
-      "closed_trades": 8,
+      "closed_trades": 9,
       "wins": 2,
-      "losses": 6,
-      "net_pips": -900.0,
-      "win_rate": 25.0,
-      "avg_pips": -112.5,
+      "losses": 7,
+      "net_pips": -1100.0,
+      "win_rate": 22.22222222222222,
+      "avg_pips": -122.22222222222223,
       "best_trade": 200.0,
       "worst_trade": -200.0,
-      "net_dollars": -40.0,
+      "net_dollars": -50.0,
       "last_signal_ts": null,
       "last_signal_dir": null,
       "last_signal_entry": null,
@@ -393,10 +393,10 @@
         }
       ],
       "last_close": {
-        "signal_id": "US30_1782488618",
+        "signal_id": "US30_1782490181",
         "outcome": "loss",
         "pips": -200.0,
-        "closed_at": "2026-06-26T15:51:38.911220+00:00",
+        "closed_at": "2026-06-26T16:20:35.267504+00:00",
         "tp_hit": 0,
         "sl_hit": 1
       },
@@ -433,6 +433,15 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "US30_1782490181",
+      "outcome": "loss",
+      "net_pips": -200.0,
+      "closed_at": "2026-06-26T16:20:35.267504+00:00",
+      "tp_hit": 0,
+      "sl_hit": 1,
+      "duration_min": 2.3833333333333335e-06
+    },
     {
       "signal_id": "US30_1782488618",
       "outcome": "loss",
@@ -1986,11 +1995,11 @@
       "channel_name": "US30 OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-26T15:51:38.862370+00:00",
-      "total_updates": 7,
-      "successful_replies": 7,
+      "last_trade_update": "2026-06-26T16:20:35.241562+00:00",
+      "total_updates": 8,
+      "successful_replies": 8,
       "success_rate": 100.0,
-      "last_activity": "2026-06-26T15:51:38.862370+00:00"
+      "last_activity": "2026-06-26T16:20:35.241562+00:00"
     }
   ],
   "process_health": {
