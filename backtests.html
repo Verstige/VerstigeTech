@@ -12,6 +12,15 @@
   .window-tab:hover{color:var(--text)}
   .window-tab.active{background:var(--panel-2);color:var(--cyan);border-color:var(--border-cyan)}
   .caveat{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;font-family:var(--font-mono);font-size:11px;color:var(--gold);line-height:1.6}
+  .section-title{
+    font-family:var(--font-mono);font-size:10px;color:var(--dim);
+    letter-spacing:0.18em;text-transform:uppercase;font-weight:600;
+    margin-bottom:12px;display:flex;align-items:center;gap:10px;
+  }
+  .section-title::after{
+    content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border) 0%,transparent 100%);
+  }
+  .data-table{font-family:var(--font-mono);font-size:12px}
 </style>
 </head>
 <body>
@@ -41,24 +50,79 @@
 
       <!-- KPI summary -->
       <div class="kpi-grid">
-        <div class="kpi"><div class="kpi-label">Signals</div><div class="kpi-value" id="b-signals">—</div></div>
-        <div class="kpi emerald"><div class="kpi-label">Win Rate</div><div class="kpi-value positive" id="b-wr">—</div><div class="kpi-sub" id="b-wl">—</div></div>
-        <div class="kpi gold"><div class="kpi-label">Total Pips</div><div class="kpi-value gold" id="b-pips">—</div></div>
-        <div class="kpi purple"><div class="kpi-label">Avg Pips / Sig</div><div class="kpi-value" id="b-avg">—</div></div>
-        <div class="kpi pink"><div class="kpi-label">Closed</div><div class="kpi-value" id="b-closed">—</div></div>
+        <div class="kpi-card"><div class="label">Signals</div><div class="value" id="b-signals">—</div></div>
+        <div class="kpi-card emerald"><div class="label">Win Rate</div><div class="value" id="b-wr">—</div><div class="sub" id="b-wl">—</div></div>
+        <div class="kpi-card gold"><div class="label">Total Pips</div><div class="value" id="b-pips">—</div></div>
+        <div class="kpi-card"><div class="label">Avg Pips / Sig</div><div class="value" id="b-avg">—</div></div>
+        <div class="kpi-card"><div class="label">Closed</div><div class="value" id="b-closed">—</div></div>
       </div>
 
-      <!-- Chart -->
-      <div class="glass" style="padding:24px;margin-bottom:24px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Net Pips by Engine</div>
-        <canvas id="chart-backtest" height="100"></canvas>
+      <!-- Section: Performance pies -->
+      <div class="section-title">PERFORMANCE BREAKDOWN</div>
+      <div class="chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Net Pips by Engine</div>
+              <div class="chart-sub">Per-engine contribution to total period P&amp;L</div>
+            </div>
+            <div class="chart-meta" id="bp-meta">— engines</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-backtest"></canvas>
+          </div>
+          <div class="contrib-list" id="bp-contrib"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Win / Loss Split</div>
+              <div class="chart-sub">Aggregate outcomes for this window</div>
+            </div>
+            <div class="chart-meta" id="bp-wl-meta">—</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-wl"></canvas>
+          </div>
+        </div>
       </div>
 
-      <!-- Table -->
-      <div class="glass" style="padding:24px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">Per-Engine Breakdown — <span id="b-window-label">7 days</span></div>
+      <!-- Section: Volume share -->
+      <div class="section-title">VOLUME &amp; SIGNAL SHARE</div>
+      <div class="chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Signal Volume Share</div>
+              <div class="chart-sub">Each engine's slice of total signals</div>
+            </div>
+            <div class="chart-meta" id="vol-meta">— signals</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-vol"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Win Rate Share</div>
+              <div class="chart-sub">WR contribution per engine</div>
+            </div>
+            <div class="chart-meta" id="wr-meta">— engines</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-wr"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per-engine breakdown table -->
+      <div class="section-title">PER-ENGINE BREAKDOWN — <span id="b-window-label">7 days</span></div>
+      <div class="chart-card" style="padding:0;overflow:hidden">
         <div style="overflow-x:auto">
-          <table class="data-table">
+          <table class="data-table" style="width:100%">
             <thead><tr>
               <th>Rank</th><th>Engine</th><th>Symbol</th>
               <th class="num">Signals</th><th class="num">Wins</th>
@@ -80,7 +144,6 @@
 <script>
 let CURRENT = '7d';
 let BT_DATA = null;
-let BT_CHART = null;
 
 async function loadWindow(w){
   CURRENT = w;
@@ -99,30 +162,119 @@ function render(){
   const t = BT_DATA.totals;
   document.getElementById('b-signals').textContent = fmtNum(t.signals);
   document.getElementById('b-wr').textContent = fmtPct(t.wr);
-  document.getElementById('b-wr').className = 'kpi-value ' + (t.wr>=50?'positive':'negative');
+  document.getElementById('b-wr').className = 'value ' + (t.wr>=50?'positive':'negative');
   document.getElementById('b-wl').textContent = `${fmtNum(t.wins)}W · ${fmtNum(t.losses)}L`;
   document.getElementById('b-pips').textContent = fmtPips(t.total_pips);
-  document.getElementById('b-pips').className = 'kpi-value ' + (t.total_pips>=0?'positive':'negative') + ' gold';
+  document.getElementById('b-pips').className = 'value ' + (t.total_pips>=0?'positive':'negative');
   document.getElementById('b-avg').textContent = fmtPips(t.total_pips / Math.max(1,t.signals));
   document.getElementById('b-closed').textContent = fmtNum(t.closed);
   document.getElementById('b-window-label').textContent = BT_DATA.window + ' days';
 
-  // Chart
-  const ctx = document.getElementById('chart-backtest').getContext('2d');
-  if(BT_CHART) BT_CHART.destroy();
-  const ranked = [...BT_DATA.engines].sort((a,b)=>b.total_pips-a.total_pips);
-  BT_CHART = new Chart(ctx,{type:'bar',
-    data:{labels:ranked.map(e=>e.name),datasets:[{
-      data:ranked.map(e=>e.total_pips),
-      backgroundColor:ranked.map(e=>e.total_pips>=0?'#10b981':'#ef4444'),
-      borderRadius:6,
-    }]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.x)+' pips'}}},
-      scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:11}},grid:{display:false}}}}});
+  renderBacktestPie();
+  renderWLPie();
+  renderVolPie();
+  renderWRPie();
+  renderTable();
+}
 
-  // Table
+// ─── Net pips by engine doughnut ──────────────────────────────
+function renderBacktestPie(){
+  const ranked = [...BT_DATA.engines].sort((a,b)=>b.total_pips-a.total_pips);
+  const labels = ranked.map(e=>e.name);
+  const values = ranked.map(e=>e.total_pips);
+  const colors = labels.map(l=>engineColor(l));
+  const totalAbs = values.reduce((s,v)=>s+Math.abs(v), 0);
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-backtest', labels, values, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'TOTAL PIPS',
+    centerValue: fmtPips(total),
+    centerSub: `${ranked.length} engines`,
+    splitNegatives: false,
+    tooltipLabel: (c, lbls, vals)=>{
+      const pct = totalAbs ? ((Math.abs(vals[c.dataIndex])/totalAbs)*100).toFixed(1) : '0';
+      const sign = vals[c.dataIndex] >= 0 ? '+' : '−';
+      return `${c.label}: ${sign}${Math.abs(vals[c.dataIndex]).toFixed(1)} pips (${pct}%)`;
+    }
+  });
+  document.getElementById('bp-meta').textContent = `${ranked.length} engines`;
+
+  const max = Math.max(...values.map(v=>Math.abs(v)), 1);
+  document.getElementById('bp-contrib').innerHTML = ranked.map(e=>{
+    const color = engineColor(e.name);
+    const width = (Math.abs(e.total_pips)/max) * 100;
+    const isPos = e.total_pips >= 0;
+    return `<div class="contrib-row">
+      <span class="name" style="color:${color}">${e.name}</span>
+      <div class="bar-wrap"><div class="bar" style="width:${width}%;background:${color};opacity:${isPos?0.9:0.55}"></div></div>
+      <span class="val ${isPos?'positive':'negative'}">${fmtPips(e.total_pips)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── Win/Loss split doughnut ─────────────────────────────────
+function renderWLPie(){
+  const t = BT_DATA.totals;
+  const w = t.wins || 0;
+  const l = t.losses || 0;
+  const total = w + l;
+  renderDoughnut('chart-wl', ['Wins', 'Losses'], [w, l], ['#10b981', '#ef4444'], {
+    cutout: '62%',
+    legendPosition: 'bottom',
+    centerLabelText: 'WIN RATE',
+    centerValue: total ? ((w/total)*100).toFixed(1)+'%' : '—',
+    centerSub: `${total} closed`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+      return `${c.label}: ${vals[c.dataIndex]} (${pct}%)`;
+    }
+  });
+  document.getElementById('bp-wl-meta').textContent = `${total} closed`;
+}
+
+// ─── Signal volume share ─────────────────────────────────────
+function renderVolPie(){
+  const labels = BT_DATA.engines.map(e=>e.name);
+  const values = BT_DATA.engines.map(e=>e.signals||0);
+  const colors = labels.map(l=>engineColor(l));
+  const total = values.reduce((s,v)=>s+v, 0);
+  renderDoughnut('chart-vol', labels, values, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'TOTAL SIGNALS',
+    centerValue: total,
+    centerSub: `${labels.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+      return `${c.label}: ${vals[c.dataIndex]} (${pct}%)`;
+    }
+  });
+  document.getElementById('vol-meta').textContent = `${total} signals`;
+}
+
+// ─── Win Rate share ──────────────────────────────────────────
+function renderWRPie(){
+  const labels = BT_DATA.engines.map(e=>e.name);
+  const wr = BT_DATA.engines.map(e=>e.wr||0);
+  const colors = labels.map(l=>engineColor(l));
+  const avg = wr.length ? (wr.reduce((s,v)=>s+v,0)/wr.length) : 0;
+  const total = wr.reduce((s,v)=>s+v, 0);
+  renderDoughnut('chart-wr', labels, wr, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'AVG WR',
+    centerValue: avg.toFixed(1)+'%',
+    centerSub: `${labels.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>`${c.label}: ${vals[c.dataIndex].toFixed(1)}% WR`
+  });
+  document.getElementById('wr-meta').textContent = `${labels.length} engines`;
+}
+
+// ─── Table ────────────────────────────────────────────────────
+function renderTable(){
+  const ranked = [...BT_DATA.engines].sort((a,b)=>b.total_pips-a.total_pips);
   const tb = document.getElementById('backtest-tbody');
   tb.innerHTML = ranked.map((e,i)=>{
     const eng = ENGINES.find(x=>x[0]===e.name);

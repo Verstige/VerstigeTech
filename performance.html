@@ -17,6 +17,21 @@
   .metric-row:last-child{border-bottom:none}
   .metric-row .l{color:var(--dim);text-transform:uppercase;letter-spacing:0.1em;font-size:10px}
   .metric-row .v{font-weight:600}
+  .section-title{
+    font-family:var(--font-mono);font-size:10px;color:var(--dim);
+    letter-spacing:0.18em;text-transform:uppercase;font-weight:600;
+    margin-bottom:12px;display:flex;align-items:center;gap:10px;
+  }
+  .section-title::after{
+    content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border) 0%,transparent 100%);
+  }
+  .winner-row, .loser-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 12px;border-radius:6px;
+    font-family:var(--font-mono);font-size:11px;
+  }
+  .winner-row{background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15)}
+  .loser-row{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15)}
 </style>
 </head>
 <body>
@@ -34,34 +49,73 @@
 
       <!-- Top stats -->
       <div class="kpi-grid">
-        <div class="kpi emerald"><div class="kpi-label">Best Trade</div><div class="kpi-value positive" id="p-best">—</div><div class="kpi-sub" id="p-best-eng">—</div></div>
-        <div class="kpi red"><div class="kpi-label">Worst Trade</div><div class="kpi-value negative" id="p-worst">—</div><div class="kpi-sub" id="p-worst-eng">—</div></div>
-        <div class="kpi gold"><div class="kpi-label">Avg Win</div><div class="kpi-value gold" id="p-avgwin">—</div><div class="kpi-sub">across all winners</div></div>
-        <div class="kpi pink"><div class="kpi-label">Avg Loss</div><div class="kpi-value negative" id="p-avgloss">—</div><div class="kpi-sub">across all losers</div></div>
-        <div class="kpi purple"><div class="kpi-label">Payoff Ratio</div><div class="kpi-value" id="p-payoff">—</div><div class="kpi-sub">avg win / |avg loss|</div></div>
+        <div class="kpi-card emerald"><div class="label">Best Trade</div><div class="value positive" id="p-best">—</div><div class="sub" id="p-best-eng">—</div></div>
+        <div class="kpi-card red"><div class="label">Worst Trade</div><div class="value negative" id="p-worst">—</div><div class="sub" id="p-worst-eng">—</div></div>
+        <div class="kpi-card gold"><div class="label">Avg Win</div><div class="value" id="p-avgwin">—</div><div class="sub">across all winners</div></div>
+        <div class="kpi-card"><div class="label">Avg Loss</div><div class="value negative" id="p-avgloss">—</div><div class="sub">across all losers</div></div>
+        <div class="kpi-card"><div class="label">Payoff Ratio</div><div class="value" id="p-payoff">—</div><div class="sub">avg win / |avg loss|</div></div>
       </div>
 
-      <!-- Distribution chart -->
-      <div class="glass" style="padding:24px;margin-bottom:32px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">P&amp;L Distribution</div>
-        <canvas id="chart-distribution" height="100"></canvas>
+      <!-- Section: Distribution pies -->
+      <div class="section-title">P&amp;L DISTRIBUTION</div>
+      <div class="chart-grid-3">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Outcome Breakdown</div>
+              <div class="chart-sub">Wins / Losses / Voided</div>
+            </div>
+            <div class="chart-meta" id="dist-meta">— closed</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-distribution"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Magnitude Buckets</div>
+              <div class="chart-sub">Trades grouped by pips magnitude</div>
+            </div>
+            <div class="chart-meta" id="buckets-meta">— trades</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-buckets"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Engine Quality Mix</div>
+              <div class="chart-sub">Closed trade quality by engine</div>
+            </div>
+            <div class="chart-meta" id="mix-meta">— trades</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-mix"></canvas>
+          </div>
+        </div>
       </div>
 
       <!-- Per-engine cards -->
-      <div class="section-header">
-        <span class="eyebrow purple">PER-ENGINE</span>
-        <h2 class="section-title">Every engine, every metric.</h2>
-      </div>
+      <div class="section-title">PER-ENGINE PERFORMANCE</div>
       <div class="perf-grid" id="perf-cards"></div>
 
       <!-- Recent winners/losers -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:32px">
-        <div class="glass" style="padding:24px">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--emerald-2);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">🏆 Top 10 Winners</div>
+      <div class="section-title">TOP TRADES</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="chart-card">
+          <div class="chart-header" style="margin-bottom:16px">
+            <div class="chart-title" style="color:var(--emerald-2)">🏆 Top 10 Winners</div>
+          </div>
           <div id="winners-list" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
-        <div class="glass" style="padding:24px">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--red-2);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">💀 Top 10 Losers</div>
+        <div class="chart-card">
+          <div class="chart-header" style="margin-bottom:16px">
+            <div class="chart-title" style="color:var(--red-2)">💀 Top 10 Losers</div>
+          </div>
           <div id="losers-list" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
@@ -86,14 +140,13 @@ function engineFromSignalId(sid){
   return null;
 }
 
-let DIST_CHART = null;
-
 function render(){
   if(!DATA) return;
 
-  const feed = DATA.feed;
+  const feed = (DATA.feed || []).filter(f => f.status === 'closed');
   const wins = feed.filter(f=>f.net_pips>0);
-  const losses = feed.filter(f=>f.net_pips<=0);
+  const losses = feed.filter(f=>f.net_pips<=0 && f.outcome !== 'voided');
+  const voids = feed.filter(f=>f.outcome === 'voided');
 
   // Best/worst
   const best = [...feed].sort((a,b)=>b.net_pips-a.net_pips)[0];
@@ -114,29 +167,140 @@ function render(){
   document.getElementById('p-avgloss').textContent = fmtPips(avgL);
   document.getElementById('p-payoff').textContent = avgL!==0 ? (Math.abs(avgW/Math.abs(avgL))).toFixed(2)+'×' : '∞';
 
-  // Distribution histogram
-  const ctx = document.getElementById('chart-distribution').getContext('2d');
-  if(DIST_CHART) DIST_CHART.destroy();
-  const buckets = {};
-  for(const f of feed){
-    const bucket = Math.round(f.net_pips/100)*100;
-    buckets[bucket] = (buckets[bucket]||0)+1;
-  }
-  const labels = Object.keys(buckets).map(Number).sort((a,b)=>a-b);
-  const data = labels.map(l=>buckets[l]);
-  DIST_CHART = new Chart(ctx,{type:'bar',
-    data:{labels:labels.map(l=>fmtPips(l)),datasets:[{
-      data,
-      backgroundColor:labels.map(l=>l>=0?'rgba(16,185,129,0.7)':'rgba(239,68,68,0.7)'),
-      borderColor:labels.map(l=>l>=0?'#10b981':'#ef4444'),
-      borderWidth:1,borderRadius:4,
-    }]},
-    options:{animation:false,responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label} pips: ${c.parsed.y} trades`}}},
-      scales:{x:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10},maxRotation:45},grid:{display:false}},
-        y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+  // Charts
+  renderDistribution(wins.length, losses.length, voids.length);
+  renderBuckets(feed);
+  renderMix(feed);
 
   // Per-engine cards
+  renderPerfCards();
+
+  // Winners/losers
+  const winners = [...feed].sort((a,b)=>b.net_pips-a.net_pips).slice(0,10);
+  const losers = [...feed].sort((a,b)=>a.net_pips-b.net_pips).slice(0,10);
+  document.getElementById('winners-list').innerHTML = winners.map(f=>{
+    const eng = engineFromSignalId(f.signal_id) || 'unknown';
+    const color = engineColor(eng);
+    return `<div class="winner-row">
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="color:${color};font-weight:700">${eng}</span>
+        <span style="color:var(--muted)">${f.signal_id}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="color:var(--emerald-2);font-weight:600">${fmtPips(f.net_pips)}</span>
+        <span class="muted small">${fmtTime(f.closed_at)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('losers-list').innerHTML = losers.map(f=>{
+    const eng = engineFromSignalId(f.signal_id) || 'unknown';
+    const color = engineColor(eng);
+    return `<div class="loser-row">
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="color:${color};font-weight:700">${eng}</span>
+        <span style="color:var(--muted)">${f.signal_id}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span style="color:var(--red-2);font-weight:600">${fmtPips(f.net_pips)}</span>
+        <span class="muted small">${fmtTime(f.closed_at)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Outcome breakdown doughnut ───────────────────────────────
+function renderDistribution(w, l, v){
+  const total = w + l + v;
+  renderDoughnut('chart-distribution',
+    ['Wins', 'Losses', 'Voided'],
+    [w, l, v],
+    ['#10b981', '#ef4444', '#94a3b8'],
+    {
+      cutout: '62%',
+      legendPosition: 'bottom',
+      centerLabelText: 'CLOSED',
+      centerValue: total,
+      centerSub: `${fmtPct(w/Math.max(total,1)*100)} wins`,
+      tooltipLabel: (c, lbls, vals)=>{
+        const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+        return `${c.label}: ${vals[c.dataIndex]} (${pct}%)`;
+      }
+    }
+  );
+  document.getElementById('dist-meta').textContent = `${total} closed`;
+}
+
+// ─── Magnitude buckets doughnut ──────────────────────────────
+function renderBuckets(feed){
+  const buckets = {
+    'Big Win (≥+200)': 0,
+    'Win (0 to +200)': 0,
+    'Small Loss (-200 to 0)': 0,
+    'Big Loss (≤-200)': 0,
+  };
+  feed.forEach(f=>{
+    if(f.outcome === 'voided') return;
+    const p = f.net_pips;
+    if(p >= 200) buckets['Big Win (≥+200)']++;
+    else if(p > 0) buckets['Win (0 to +200)']++;
+    else if(p > -200) buckets['Small Loss (-200 to 0)']++;
+    else buckets['Big Loss (≤-200)']++;
+  });
+  const labels = Object.keys(buckets);
+  const values = labels.map(l=>buckets[l]);
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-buckets', labels, values,
+    ['#10b981', 'rgba(16,185,129,0.5)', 'rgba(239,68,68,0.5)', '#ef4444'],
+    {
+      cutout: '55%',
+      legendPosition: 'right',
+      centerLabelText: 'TOTAL TRADES',
+      centerValue: total,
+      centerSub: `${labels.length} buckets`,
+      tooltipLabel: (c, lbls, vals)=>{
+        const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+        return `${c.label}: ${vals[c.dataIndex]} (${pct}%)`;
+      }
+    }
+  );
+  document.getElementById('buckets-meta').textContent = `${total} trades`;
+}
+
+// ─── Engine quality mix doughnut ─────────────────────────────
+function renderMix(feed){
+  // For each engine, count wins (net_pips>0) — show as winners-only mix
+  const winners = feed.filter(f => f.outcome === 'win');
+  const counts = {};
+  winners.forEach(f => {
+    const eng = engineFromSignalId(f.signal_id);
+    if(eng) counts[eng] = (counts[eng] || 0) + 1;
+  });
+  const labels = Object.keys(counts);
+  const values = labels.map(l => counts[l]);
+  const colors = labels.map(l => engineColor(l));
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  if(total === 0){
+    renderDoughnut('chart-mix', ['No winners'], [1], ['#1f2937'],
+      {centerLabelText:'WINNERS',centerValue:'0',centerSub:'—'});
+  } else {
+    renderDoughnut('chart-mix', labels, values, colors, {
+      cutout: '62%',
+      legendPosition: 'right',
+      centerLabelText: 'WINNERS',
+      centerValue: total,
+      centerSub: `${labels.length} engines`,
+      tooltipLabel: (c, lbls, vals)=>{
+        const pct = ((vals[c.dataIndex]/total)*100).toFixed(1);
+        return `${c.label}: ${vals[c.dataIndex]} wins (${pct}%)`;
+      }
+    });
+  }
+  document.getElementById('mix-meta').textContent = `${total} winners`;
+}
+
+function renderPerfCards(){
   const cards = document.getElementById('perf-cards');
   cards.innerHTML = DATA.engines.map(e=>{
     const eng = ENGINES.find(x=>x[0]===e.name);
@@ -147,7 +311,7 @@ function render(){
         <div class="perf-name" style="color:${color}">${e.name}</div>
         <div class="perf-symbol">${sym}</div>
       </div>
-      <div class="metric-row"><span class="l">Net Pips</span><span class="v ${e.net_pips>0?'positive':'negative'}" style="color:${e.net_pips>0?'var(--emerald-2)':'var(--red-2)'}">${fmtPips(e.net_pips||0)}</span></div>
+      <div class="metric-row"><span class="l">Net Pips</span><span class="v" style="color:${e.net_pips>0?'var(--emerald-2)':'var(--red-2)'}">${fmtPips(e.net_pips||0)}</span></div>
       <div class="metric-row"><span class="l">P&amp;L ($)</span><span class="v" style="color:${e.net_dollars>0?'var(--emerald-2)':'var(--red-2)'}">${fmtUSD(e.net_dollars||0)}</span></div>
       <div class="metric-row"><span class="l">Closed</span><span class="v">${e.closed_trades||0}</span></div>
       <div class="metric-row"><span class="l">Wins / Losses</span><span class="v"><span style="color:var(--emerald-2)">${e.wins||0}W</span> / <span style="color:var(--red-2)">${e.losses||0}L</span></span></div>
@@ -157,38 +321,6 @@ function render(){
       <div class="metric-row"><span class="l">Worst Trade</span><span class="v" style="color:var(--red-2)">${fmtPips(e.worst_trade||0)}</span></div>
       <div class="metric-row"><span class="l">Open</span><span class="v" style="color:var(--gold)">${e.open_trades||0}</span></div>
       <div class="metric-row"><span class="l">Signals</span><span class="v">${fmtNum(e.total_signals||0)}</span></div>
-    </div>`;
-  }).join('');
-
-  // Winners/losers
-  const winners = [...feed].sort((a,b)=>b.net_pips-a.net_pips).slice(0,10);
-  const losers = [...feed].sort((a,b)=>a.net_pips-b.net_pips).slice(0,10);
-  document.getElementById('winners-list').innerHTML = winners.map(f=>{
-    const eng = engineFromSignalId(f.signal_id) || 'unknown';
-    const color = ENGINES.find(x=>x[0]===eng)?.[3] || '#888';
-    return `<div class="flex items-center justify-between" style="padding:8px 12px;background:rgba(16,185,129,0.05);border-radius:6px;border:1px solid rgba(16,185,129,0.15)">
-      <div style="display:flex;gap:10px;align-items:center">
-        <span style="color:${color};font-family:var(--font-mono);font-weight:700;font-size:11px">${eng}</span>
-        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${f.signal_id}</span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <span class="mono" style="color:var(--emerald-2);font-weight:600">${fmtPips(f.net_pips)}</span>
-        <span class="muted small">${fmtTime(f.closed_at)}</span>
-      </div>
-    </div>`;
-  }).join('');
-  document.getElementById('losers-list').innerHTML = losers.map(f=>{
-    const eng = engineFromSignalId(f.signal_id) || 'unknown';
-    const color = ENGINES.find(x=>x[0]===eng)?.[3] || '#888';
-    return `<div class="flex items-center justify-between" style="padding:8px 12px;background:rgba(239,68,68,0.05);border-radius:6px;border:1px solid rgba(239,68,68,0.15)">
-      <div style="display:flex;gap:10px;align-items:center">
-        <span style="color:${color};font-family:var(--font-mono);font-weight:700;font-size:11px">${eng}</span>
-        <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">${f.signal_id}</span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <span class="mono" style="color:var(--red-2);font-weight:600">${fmtPips(f.net_pips)}</span>
-        <span class="muted small">${fmtTime(f.closed_at)}</span>
-      </div>
     </div>`;
   }).join('');
 }

@@ -6,6 +6,17 @@
 <title>Analytics · VerstigeTech</title>
 <link rel="stylesheet" href="assets/styles.css" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .section-title{
+    font-family:var(--font-mono);font-size:10px;color:var(--dim);
+    letter-spacing:0.18em;text-transform:uppercase;font-weight:600;
+    margin-bottom:12px;display:flex;align-items:center;gap:10px;
+  }
+  .section-title::after{
+    content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border) 0%,transparent 100%);
+  }
+  .data-table{font-family:var(--font-mono);font-size:12px}
+</style>
 </head>
 <body>
 <div class="app">
@@ -22,35 +33,93 @@
 
       <!-- KPI strip -->
       <div class="kpi-grid">
-        <div class="kpi"><div class="kpi-label">Total Closed</div><div class="kpi-value" id="a-closed">—</div><div class="kpi-sub">all-time</div></div>
-        <div class="kpi emerald"><div class="kpi-label">Total Wins</div><div class="kpi-value positive" id="a-wins">—</div><div class="kpi-sub" id="a-wr-pct">—</div></div>
-        <div class="kpi red"><div class="kpi-label">Total Losses</div><div class="kpi-value negative" id="a-losses">—</div><div class="kpi-sub" id="a-loss-pct">—</div></div>
-        <div class="kpi gold"><div class="kpi-label">Avg Win</div><div class="kpi-value gold" id="a-avgwin">—</div><div class="kpi-sub">pips per win</div></div>
-        <div class="kpi pink"><div class="kpi-label">Avg Loss</div><div class="kpi-value" id="a-avgloss">—</div><div class="kpi-sub">pips per loss</div></div>
+        <div class="kpi-card"><div class="label">Total Closed</div><div class="value" id="a-closed">—</div><div class="sub">all-time</div></div>
+        <div class="kpi-card emerald"><div class="label">Total Wins</div><div class="value positive" id="a-wins">—</div><div class="sub" id="a-wr-pct">—</div></div>
+        <div class="kpi-card red"><div class="label">Total Losses</div><div class="value negative" id="a-losses">—</div><div class="sub" id="a-loss-pct">—</div></div>
+        <div class="kpi-card gold"><div class="label">Avg Win</div><div class="value" id="a-avgwin">—</div><div class="sub">pips per win</div></div>
+        <div class="kpi-card"><div class="label">Avg Loss</div><div class="value" id="a-avgloss">—</div><div class="sub">pips per loss</div></div>
       </div>
 
-      <!-- Charts -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px">
-        <div class="glass" style="padding:24px">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Win Rate by Engine</div>
-          <canvas id="chart-wr" height="180"></canvas>
+      <!-- Section: Outcome distribution pies -->
+      <div class="section-title">OUTCOME DISTRIBUTION</div>
+      <div class="chart-grid-3">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Win / Loss / Voided</div>
+              <div class="chart-sub">All closed trades</div>
+            </div>
+            <div class="chart-meta" id="outcomes-meta">— closed</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-outcomes"></canvas>
+          </div>
         </div>
-        <div class="glass" style="padding:24px">
-          <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Profit Factor by Engine</div>
-          <canvas id="chart-pf" height="180"></canvas>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Profit Factor by Engine</div>
+              <div class="chart-sub">Sum(wins) ÷ |sum(losses)|</div>
+            </div>
+            <div class="chart-meta" id="pf-meta">— engines</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-pf"></canvas>
+          </div>
+          <div class="contrib-list" id="pf-contrib"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Win Rate by Engine</div>
+              <div class="chart-sub">Per-engine WR slices</div>
+            </div>
+            <div class="chart-meta" id="wr-meta">— engines</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-wr"></canvas>
+          </div>
+          <div class="contrib-list" id="wr-contrib"></div>
         </div>
       </div>
 
-      <div class="glass" style="padding:24px;margin-bottom:32px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Cumulative P&amp;L Curve</div>
-        <canvas id="chart-curve" height="100"></canvas>
+      <!-- Section: Engine breakdown -->
+      <div class="section-title">ENGINE COMPOSITION</div>
+      <div class="chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Cumulative P&amp;L Share</div>
+              <div class="chart-sub">Each engine's slice of all-time net pips</div>
+            </div>
+            <div class="chart-meta" id="cum-meta">—</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-cum"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Trade Volume Share</div>
+              <div class="chart-sub">Closed trades per engine (% of total)</div>
+            </div>
+            <div class="chart-meta" id="vol-meta">— trades</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-vol"></canvas>
+          </div>
+        </div>
       </div>
 
       <!-- Per-engine breakdown table -->
-      <div class="glass" style="padding:24px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">Per-Engine Breakdown</div>
+      <div class="section-title">PER-ENGINE BREAKDOWN</div>
+      <div class="chart-card" style="padding:0;overflow:hidden">
         <div style="overflow-x:auto">
-          <table class="data-table">
+          <table class="data-table" style="width:100%">
             <thead><tr>
               <th>Engine</th><th>Symbol</th>
               <th class="num">Signals</th><th class="num">Closed</th>
@@ -72,82 +141,6 @@
 
 <script src="assets/site.js"></script>
 <script>
-let CHART_WR=null, CHART_PF=null, CHART_CURVE=null;
-
-function render(){
-  if(!DATA) return;
-
-  const t = DATA.totals;
-  document.getElementById('a-closed').textContent = fmtNum(t.total_closed);
-  document.getElementById('a-wins').textContent = fmtNum(t.total_wins);
-  document.getElementById('a-losses').textContent = fmtNum(t.total_losses);
-  document.getElementById('a-wr-pct').textContent = fmtPct(t.win_rate) + ' WR';
-  document.getElementById('a-loss-pct').textContent = fmtPct(100 - t.win_rate) + ' of closed';
-
-  // Avg win/loss
-  let totalWin=0, totalLoss=0, countW=0, countL=0;
-  for(const e of DATA.engines){
-    if(e.best_trade > 0){totalWin += e.best_trade; countW++;}
-    if(e.worst_trade < 0){totalLoss += Math.abs(e.worst_trade); countL++;}
-  }
-  // Better: from feed
-  const wins = DATA.feed.filter(f=>f.net_pips>0);
-  const losses = DATA.feed.filter(f=>f.net_pips<=0);
-  if(wins.length){
-    const avgW = wins.reduce((s,f)=>s+f.net_pips,0)/wins.length;
-    document.getElementById('a-avgwin').textContent = fmtPips(avgW);
-  }
-  if(losses.length){
-    const avgL = losses.reduce((s,f)=>s+f.net_pips,0)/losses.length;
-    document.getElementById('a-avgloss').textContent = fmtPips(avgL);
-  }
-
-  // Charts
-  renderWR();
-  renderPF();
-  renderCurve();
-  renderBreakdown();
-}
-
-function renderWR(){
-  const ctx = document.getElementById('chart-wr').getContext('2d');
-  if(CHART_WR) CHART_WR.destroy();
-  const labels = DATA.engines.map(e=>e.name);
-  const data = DATA.engines.map(e=>e.win_rate||0);
-  const colors = DATA.engines.map(e=>{
-    const eng = ENGINES.find(x=>x[0]===e.name);
-    return eng?eng[3]:'#888';
-  });
-  CHART_WR = new Chart(ctx,{type:'bar',
-    data:{labels,datasets:[{data,backgroundColor:colors,borderRadius:4}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPct(c.parsed.x)}}},
-      scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}}});
-}
-
-function renderPF(){
-  const ctx = document.getElementById('chart-pf').getContext('2d');
-  if(CHART_PF) CHART_PF.destroy();
-  // Profit factor = sum(wins) / abs(sum(losses))
-  const labels = DATA.engines.map(e=>e.name);
-  const pf = DATA.engines.map(e=>{
-    const wins = DATA.feed.filter(f=>engineFromSignalId(f.signal_id)===e.name && f.net_pips>0);
-    const losses = DATA.feed.filter(f=>engineFromSignalId(f.signal_id)===e.name && f.net_pips<=0);
-    const sumW = wins.reduce((s,f)=>s+f.net_pips,0);
-    const sumL = Math.abs(losses.reduce((s,f)=>s+f.net_pips,0));
-    if(sumL===0) return sumW>0?999:0;
-    return sumW/sumL;
-  });
-  const colors = pf.map(v=>v>=1.5?'#10b981':v>=1?'#fbbf24':'#ef4444');
-  CHART_PF = new Chart(ctx,{type:'bar',
-    data:{labels,datasets:[{data:pf,backgroundColor:colors,borderRadius:4}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x.toFixed(2)+'×'}}},
-      scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}},grid:{display:false}}}}});
-}
-
 const ENGINE_PREFIX_LOCAL = {
   NITRO:['VST_'], DRAGON:['GBPJPY'], TITAN:['EURUSD'],
   CIPHER:['CIPH_', 'BTCUSD_'], PHANTOM:['PHNTM_', 'SOLUSD_'], NEXUS:['NAS','NDX','NEXUS'],
@@ -162,31 +155,172 @@ function engineFromSignalId(sid){
   return null;
 }
 
-function renderCurve(){
-  const ctx = document.getElementById('chart-curve').getContext('2d');
-  if(CHART_CURVE) CHART_CURVE.destroy();
-  // Sort feed by closed_at, compute cumulative
-  const sorted = [...DATA.feed].sort((a,b)=>new Date(a.closed_at)-new Date(b.closed_at));
-  let cum = 0;
-  const labels = [];
-  const data = [];
-  for(const f of sorted){
-    cum += f.net_pips;
-    labels.push(fmtTime(f.closed_at));
-    data.push(cum);
+function render(){
+  if(!DATA) return;
+
+  const t = DATA.totals;
+  document.getElementById('a-closed').textContent = fmtNum(t.total_closed);
+  document.getElementById('a-wins').textContent = fmtNum(t.total_wins);
+  document.getElementById('a-losses').textContent = fmtNum(t.total_losses);
+  document.getElementById('a-wr-pct').textContent = fmtPct(t.win_rate) + ' WR';
+  document.getElementById('a-loss-pct').textContent = fmtPct(100 - t.win_rate) + ' of closed';
+
+  const wins = DATA.feed.filter(f=>f.status==='closed' && f.outcome==='win');
+  const losses = DATA.feed.filter(f=>f.status==='closed' && f.outcome==='loss');
+  const voids = DATA.feed.filter(f=>f.status==='closed' && f.outcome==='voided');
+  if(wins.length){
+    const avgW = wins.reduce((s,f)=>s+f.net_pips,0)/wins.length;
+    document.getElementById('a-avgwin').textContent = fmtPips(avgW);
   }
-  // Reverse so latest is rightmost
-  CHART_CURVE = new Chart(ctx,{type:'line',
-    data:{labels:labels.slice().reverse(),datasets:[{
-      data:data.slice().reverse(),
-      borderColor:'#00d4ff',
-      backgroundColor:'rgba(0,212,255,0.1)',
-      fill:true,tension:0.3,pointRadius:0,borderWidth:2,
-    }]},
-    options:{animation:false,responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtPips(c.parsed.y)+' pips cumulative'}}},
-      scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9},maxTicksLimit:10},grid:{display:false}},
-        y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+  if(losses.length){
+    const avgL = losses.reduce((s,f)=>s+f.net_pips,0)/losses.length;
+    document.getElementById('a-avgloss').textContent = fmtPips(avgL);
+  }
+
+  renderOutcomes(wins.length, losses.length, voids.length);
+  renderPF();
+  renderWR();
+  renderCumShare();
+  renderVolShare();
+  renderBreakdown();
+}
+
+// ─── Outcomes doughnut ────────────────────────────────────────
+function renderOutcomes(w, l, v){
+  const total = w + l + v;
+  renderDoughnut('chart-outcomes',
+    ['Wins', 'Losses', 'Voided'],
+    [w, l, v],
+    ['#10b981', '#ef4444', '#94a3b8'],
+    {
+      cutout: '62%',
+      legendPosition: 'bottom',
+      centerLabelText: 'CLOSED TRADES',
+      centerValue: total,
+      centerSub: `${fmtPct(w/Math.max(total,1)*100)} wins`,
+      tooltipLabel: (c, lbls, vals)=>{
+        const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+        return `${c.label}: ${vals[c.dataIndex]} (${pct}%)`;
+      }
+    }
+  );
+  document.getElementById('outcomes-meta').textContent = `${total} closed`;
+}
+
+// ─── Profit factor doughnut ────────────────────────────────────
+function renderPF(){
+  const labels = DATA.engines.map(e=>e.name);
+  const pf = DATA.engines.map(e=>{
+    const wins = DATA.feed.filter(f=>engineFromSignalId(f.signal_id)===e.name && f.net_pips>0);
+    const losses = DATA.feed.filter(f=>engineFromSignalId(f.signal_id)===e.name && f.net_pips<=0 && f.outcome!=='voided');
+    const sumW = wins.reduce((s,f)=>s+f.net_pips,0);
+    const sumL = Math.abs(losses.reduce((s,f)=>s+f.net_pips,0));
+    if(sumL===0) return sumW>0?3:0; // cap at 3 for display
+    return Math.min(sumW/sumL, 3);
+  });
+  const colors = pf.map(v=>v>=1.5?'#10b981':v>=1?'#fbbf24':'#ef4444');
+  const totalPF = pf.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-pf', labels, pf, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'AVG PF',
+    centerValue: (totalPF/pf.length).toFixed(2)+'×',
+    centerSub: `${pf.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const pct = totalPF ? ((vals[c.dataIndex]/totalPF)*100).toFixed(1) : '0';
+      return `${c.label}: ${vals[c.dataIndex].toFixed(2)}× (${pct}%)`;
+    }
+  });
+  document.getElementById('pf-meta').textContent = `${pf.length} engines`;
+
+  const max = Math.max(...pf, 1);
+  document.getElementById('pf-contrib').innerHTML = DATA.engines.map((e,i)=>{
+    const color = pf[i] >= 1.5 ? '#10b981' : pf[i] >= 1 ? '#fbbf24' : '#ef4444';
+    const width = (pf[i] / 3) * 100;
+    return `<div class="contrib-row">
+      <span class="name" style="color:${engineColor(e.name)}">${e.name}</span>
+      <div class="bar-wrap"><div class="bar" style="width:${width}%;background:${color};opacity:0.85"></div></div>
+      <span class="val ${pf[i]>=1?'positive':'negative'}">${pf[i].toFixed(2)}×</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── Win Rate by Engine doughnut ───────────────────────────────
+function renderWR(){
+  const labels = DATA.engines.map(e=>e.name);
+  const wr = DATA.engines.map(e=>e.win_rate||0);
+  const colors = labels.map(l=>engineColor(l));
+  const avgWR = wr.reduce((s,v)=>s+v,0) / Math.max(wr.length, 1);
+  const total = wr.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-wr', labels, wr, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'AVG WR',
+    centerValue: avgWR.toFixed(1)+'%',
+    centerSub: `${labels.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>`${c.label}: ${vals[c.dataIndex].toFixed(1)}% WR`
+  });
+  document.getElementById('wr-meta').textContent = `${labels.length} engines`;
+
+  const max = Math.max(...wr, 1);
+  document.getElementById('wr-contrib').innerHTML = DATA.engines.map((e,i)=>{
+    const color = engineColor(e.name);
+    const width = (wr[i] / 100) * 100;
+    return `<div class="contrib-row">
+      <span class="name" style="color:${color}">${e.name}</span>
+      <div class="bar-wrap"><div class="bar" style="width:${width}%;background:${color};opacity:0.85"></div></div>
+      <span class="val">${wr[i].toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── Cumulative P&L share doughnut ────────────────────────────
+function renderCumShare(){
+  const ranked = [...DATA.engines].sort((a,b)=>b.net_pips-a.net_pips);
+  const labels = ranked.map(e=>e.name);
+  const values = ranked.map(e=>Math.max(e.net_pips, 0));
+  const colors = labels.map(l=>engineColor(l));
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  if(total === 0){
+    renderDoughnut('chart-cum', ['No profit yet'], [1], ['#1f2937'], {centerLabelText:'PIPS',centerValue:'0',centerSub:'—'});
+  } else {
+    renderDoughnut('chart-cum', labels, values, colors, {
+      cutout: '62%',
+      legendPosition: 'right',
+      centerLabelText: 'TOTAL PROFIT',
+      centerValue: fmtPips(total),
+      centerSub: `${ranked.length} engines`,
+      tooltipLabel: (c, lbls, vals)=>{
+        const pct = ((vals[c.dataIndex]/total)*100).toFixed(1);
+        return `${c.label}: ${vals[c.dataIndex].toFixed(1)} pips (${pct}%)`;
+      }
+    });
+  }
+  document.getElementById('cum-meta').textContent = `${fmtPips(total)} pips`;
+}
+
+// ─── Trade volume share doughnut ───────────────────────────────
+function renderVolShare(){
+  const labels = DATA.engines.map(e=>e.name);
+  const values = DATA.engines.map(e=>e.closed_trades||0);
+  const colors = labels.map(l=>engineColor(l));
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-vol', labels, values, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'CLOSED TRADES',
+    centerValue: total,
+    centerSub: `${labels.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+      return `${c.label}: ${vals[c.dataIndex]} (${pct}%)`;
+    }
+  });
+  document.getElementById('vol-meta').textContent = `${total} trades`;
 }
 
 function renderBreakdown(){

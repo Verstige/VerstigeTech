@@ -23,6 +23,62 @@
   .risk-sub{font-family:var(--font-mono);font-size:11px;color:var(--dim);margin-top:8px;line-height:1.5}
   .exposure-bar{height:6px;border-radius:3px;background:rgba(255,255,255,0.05);overflow:hidden;margin-top:8px}
   .exposure-bar .fill{height:100%;border-radius:3px;transition:width 0.3s ease}
+
+  /* Risk calculator */
+  .calc-input{
+    width:100%;padding:14px 18px;
+    background:var(--panel-2);border:1px solid var(--border-2);border-radius:8px;
+    color:var(--text);font-family:var(--font-mono);font-size:18px;font-weight:600;
+    outline:none;transition:all 0.15s ease;
+    letter-spacing:0.02em;
+  }
+  .calc-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
+  .engine-toggle{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px;background:var(--panel-2);
+    border:1px solid var(--border);border-radius:8px;
+    cursor:pointer;transition:all 0.15s ease;
+    font-family:var(--font-mono);font-size:12px;
+  }
+  .engine-toggle:hover{border-color:var(--border-2)}
+  .engine-toggle.active{
+    background:rgba(0,212,255,0.06);
+    border-color:var(--border-cyan);
+  }
+  .engine-toggle .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .engine-toggle .name{flex:1;color:var(--text);font-weight:600;letter-spacing:0.05em}
+  .engine-toggle .sym{color:var(--dim);font-size:10px}
+  .engine-toggle .state{font-size:10px;color:var(--dim);letter-spacing:0.05em}
+  .engine-toggle.active .state{color:var(--cyan)}
+
+  .projection-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 0;border-bottom:1px dashed var(--border);
+    font-family:var(--font-mono);font-size:12px;
+  }
+  .projection-row:last-child{border-bottom:none}
+  .projection-row .l{color:var(--dim);text-transform:uppercase;letter-spacing:0.08em;font-size:10px}
+  .projection-row .v{font-weight:600}
+
+  .calc-toggle-row{
+    display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;
+  }
+  .calc-toggle{
+    padding:8px 14px;background:var(--panel-2);border:1px solid var(--border-2);
+    border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:11px;
+    cursor:pointer;font-weight:600;letter-spacing:0.05em;transition:all 0.15s ease;
+  }
+  .calc-toggle:hover{border-color:var(--cyan)}
+  .calc-toggle.active{background:rgba(0,212,255,0.1);border-color:var(--border-cyan);color:var(--cyan)}
+
+  .section-title{
+    font-family:var(--font-mono);font-size:10px;color:var(--dim);
+    letter-spacing:0.18em;text-transform:uppercase;font-weight:600;
+    margin-bottom:12px;display:flex;align-items:center;gap:10px;
+  }
+  .section-title::after{
+    content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--border) 0%,transparent 100%);
+  }
 </style>
 </head>
 <body>
@@ -72,21 +128,144 @@
         </div>
       </div>
 
-      <!-- Drawdown chart -->
-      <div class="glass" style="padding:24px;margin-bottom:32px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Equity Curve &amp; Drawdown</div>
-        <canvas id="chart-equity" height="120"></canvas>
+      <!-- RISK CALCULATOR (balance + engine selector) -->
+      <div class="section-title">RISK CALCULATOR · PROJECTED P&amp;L</div>
+      <div class="chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header" style="margin-bottom:20px">
+            <div>
+              <div class="chart-title">Your Account</div>
+              <div class="chart-sub">Enter a balance, pick engines, see projected P&amp;L</div>
+            </div>
+          </div>
+
+          <label style="display:block;font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px">Account Balance ($)</label>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <button class="calc-toggle" data-bal="500">$500</button>
+            <button class="calc-toggle" data-bal="1000">$1,000</button>
+            <button class="calc-toggle active" data-bal="2500">$2,500</button>
+            <button class="calc-toggle" data-bal="5000">$5,000</button>
+            <button class="calc-toggle" data-bal="10000">$10,000</button>
+            <button class="calc-toggle" data-bal="25000">$25,000</button>
+          </div>
+          <input type="number" id="calc-balance" class="calc-input" value="2500" min="100" step="100" style="margin-bottom:24px" />
+
+          <label style="display:block;font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Active Engines</label>
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button class="calc-toggle" id="calc-all">SELECT ALL</button>
+            <button class="calc-toggle" id="calc-none">CLEAR</button>
+            <button class="calc-toggle" id="calc-active">ONLY RUNNING</button>
+          </div>
+          <div id="calc-engines" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header" style="margin-bottom:20px">
+            <div>
+              <div class="chart-title">Projected Outcome</div>
+              <div class="chart-sub">If you put <strong id="proj-bal-display">$2,500</strong> across the selected engines at 1% risk per trade</div>
+            </div>
+          </div>
+
+          <div class="metric-strip" style="margin-bottom:20px">
+            <div class="item">
+              <div class="v" id="proj-net-pips" style="color:var(--emerald-2)">—</div>
+              <div class="l">Net Pips</div>
+            </div>
+            <div class="item">
+              <div class="v" id="proj-pnl" style="color:var(--emerald-2)">—</div>
+              <div class="l">P&amp;L</div>
+            </div>
+            <div class="item">
+              <div class="v" id="proj-roi" style="color:var(--emerald-2)">—</div>
+              <div class="l">ROI</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:20px">
+            <div class="projection-row">
+              <span class="l">Risk per trade</span>
+              <span class="v" id="proj-risk">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Engines active</span>
+              <span class="v" id="proj-engines">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Avg WR (selected)</span>
+              <span class="v" id="proj-wr">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Avg win (selected)</span>
+              <span class="v" id="proj-avgw">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Avg loss (selected)</span>
+              <span class="v" id="proj-avgl">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Total closed trades</span>
+              <span class="v" id="proj-trades">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Max DD (pips)</span>
+              <span class="v" id="proj-mdd">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Max DD ($)</span>
+              <span class="v" id="proj-mdd-usd">—</span>
+            </div>
+            <div class="projection-row">
+              <span class="l">Projected final balance</span>
+              <span class="v" id="proj-final" style="color:var(--emerald-2);font-size:14px">—</span>
+            </div>
+          </div>
+
+          <div class="chart-canvas-wrap donut-wrap" style="height:220px">
+            <canvas id="chart-projection"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk allocation donut -->
+      <div class="section-title">PORTFOLIO RISK ALLOCATION</div>
+      <div class="chart-grid-2">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Live Exposure Share</div>
+              <div class="chart-sub">Each engine's slice of currently-open positions</div>
+            </div>
+            <div class="chart-meta" id="exposure-meta">— open</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-exposure"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Symbol Diversification</div>
+              <div class="chart-sub">Distribution of open positions by symbol</div>
+            </div>
+            <div class="chart-meta" id="sym-meta">— open</div>
+          </div>
+          <div class="chart-canvas-wrap donut-wrap">
+            <canvas id="chart-symbol"></canvas>
+          </div>
+        </div>
       </div>
 
       <!-- Exposure per engine -->
-      <div class="glass" style="padding:24px;margin-bottom:32px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:16px">Live Exposure per Engine</div>
+      <div class="section-title">EXPOSURE DETAIL</div>
+      <div class="chart-card">
         <div id="exposure-list"></div>
       </div>
 
       <!-- Correlation matrix -->
-      <div class="glass" style="padding:24px">
-        <div style="font-family:var(--font-mono);font-size:10px;color:var(--dim);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:12px">Engine Correlation (Daily P&amp;L)</div>
+      <div class="section-title">ENGINE CORRELATION (DAILY P&amp;L)</div>
+      <div class="chart-card">
         <p style="font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:16px">Lower correlation = better diversification. Cells show correlation of daily P&amp;L between engines.</p>
         <div id="correlation-grid" style="overflow-x:auto"></div>
       </div>
@@ -111,16 +290,20 @@ function engineFromSignalId(sid){
   return null;
 }
 
-let EQUITY_CHART = null;
+// Risk calculator state
+const CALC = {
+  balance: 2500,
+  activeEngines: new Set(ENGINES.map(e=>e[0])), // all by default
+  riskPct: 0.01,
+};
 
 function render(){
   if(!DATA) return;
-  const feed = DATA.feed;
+  const feed = (DATA.feed || []).filter(f => f.status === 'closed');
 
   // Sort by closed_at
   const sorted = [...feed].sort((a,b)=>new Date(a.closed_at)-new Date(b.closed_at));
 
-  // Equity curve
   let cum = 0;
   const equity = [];
   const drawdown = [];
@@ -135,7 +318,6 @@ function render(){
     if(dd > maxDD) maxDD = dd;
   }
 
-  // Max consecutive wins/losses
   let mcl=0, curL=0, mclEng='';
   let mcw=0, curW=0, mcwEng='';
   let curLEng='', curWEng='';
@@ -152,22 +334,15 @@ function render(){
       curL=0;
     }
   }
-
-  // Current drawdown (last peak)
-  const lastPeak = Math.max(...equity);
-  const currentDD = lastPeak - cum;
-
-  // Recovery factor
+  const lastPeak = Math.max(...equity, 0);
+  const currentDD = Math.max(0, lastPeak - cum);
   const recoveryFactor = maxDD > 0 ? cum / maxDD : cum > 0 ? 999 : 0;
-
-  // Sharpe (simple, daily equivalent)
   const pipsArray = sorted.map(f=>f.net_pips);
   const mean = pipsArray.reduce((s,p)=>s+p,0)/Math.max(1,pipsArray.length);
   const variance = pipsArray.reduce((s,p)=>s+(p-mean)**2,0)/Math.max(1,pipsArray.length);
   const stdev = Math.sqrt(variance);
   const sharpe = stdev > 0 ? (mean/stdev)*Math.sqrt(252) : 0;
 
-  // Update KPIs
   document.getElementById('r-maxdd').textContent = fmtPips(-maxDD);
   document.getElementById('r-maxdd').className = 'risk-value danger';
   document.getElementById('r-maxdd-sub').textContent = `${fmtPips(maxDD)} pips · ${((maxDD/Math.max(1,lastPeak))*100).toFixed(1)}% of peak`;
@@ -175,37 +350,27 @@ function render(){
   document.getElementById('r-curdd').className = 'risk-value ' + (currentDD>0?'info':'ok');
   document.getElementById('r-mcl').textContent = mcl;
   document.getElementById('r-mcl').className = 'risk-value warn';
-  document.getElementById('r-mcl-sub').textContent = `${mclEng} engine`;
+  document.getElementById('r-mcl-sub').textContent = `${mclEng || '—'} engine`;
   document.getElementById('r-mcw').textContent = mcw;
   document.getElementById('r-mcw').className = 'risk-value warn';
-  document.getElementById('r-mcw-sub').textContent = `${mcwEng} engine`;
+  document.getElementById('r-mcw-sub').textContent = `${mcwEng || '—'} engine`;
   document.getElementById('r-rf').textContent = recoveryFactor===999?'∞':recoveryFactor.toFixed(2)+'×';
   document.getElementById('r-rf').className = 'risk-value ' + (recoveryFactor>=2?'ok':recoveryFactor>=1?'info':'danger');
   document.getElementById('r-sharpe').textContent = sharpe.toFixed(2);
   document.getElementById('r-sharpe').className = 'risk-value ' + (sharpe>=2?'ok':sharpe>=1?'info':'warn');
 
-  // Equity + drawdown chart
-  const ctx = document.getElementById('chart-equity').getContext('2d');
-  if(EQUITY_CHART) EQUITY_CHART.destroy();
-  const labels = sorted.map(f=>fmtTime(f.closed_at));
-  EQUITY_CHART = new Chart(ctx,{type:'line',
-    data:{labels:labels.slice().reverse(),datasets:[
-      {label:'Equity (pips)',data:equity.slice().reverse(),borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2,yAxisID:'y'},
-      {label:'Drawdown',data:drawdown.slice().reverse(),borderColor:'#ef4444',backgroundColor:'rgba(239,68,68,0.08)',fill:true,tension:0.3,pointRadius:0,borderWidth:2,yAxisID:'y'},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,animation:false,
-      plugins:{legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10}}},
-        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)}`}}},
-      scales:{
-        x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9},maxTicksLimit:8},grid:{display:false}},
-        y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
-      }});
+  // Risk calculator
+  renderCalc();
 
-  // Exposure per engine
-  const totalOpen = DATA.open_trades.length;
+  // Exposure pies
+  renderExposure();
+  renderSymbolMix();
+
+  // Exposure detail
+  const totalOpen = (DATA.open_trades || []).length;
   const exposure = DATA.engines.map(e=>{
-    const open = DATA.open_trades.filter(t=>t.engine===e.name).length;
-    return {name:e.name, open, sym:ENGINES.find(x=>x[0]===e.name)?.[1]||'',color:ENGINES.find(x=>x[0]===e.name)?.[3]||'#888'};
+    const open = (DATA.open_trades || []).filter(t=>t.engine===e.name).length;
+    return {name:e.name, open, sym:ENGINES.find(x=>x[0]===e.name)?.[1]||'',color:engineColor(e.name)};
   }).sort((a,b)=>b.open-a.open);
   document.getElementById('exposure-list').innerHTML = exposure.map(e=>{
     const pct = totalOpen>0?(e.open/totalOpen*100):0;
@@ -221,11 +386,162 @@ function render(){
     </div>`;
   }).join('');
 
-  // Correlation matrix (simple Pearson on daily pips)
+  // Correlation matrix
+  renderCorrelation();
+}
+
+// ─── Risk Calculator ──────────────────────────────────────────
+function renderCalc(){
+  // Build engine toggles
+  const container = document.getElementById('calc-engines');
+  const ph = DATA?.process_health || {};
+  container.innerHTML = ENGINES.map(([n,sym,label,color])=>{
+    const running = ph[n]?.running;
+    const active = CALC.activeEngines.has(n);
+    return `<div class="engine-toggle ${active?'active':''}" data-engine="${n}">
+      <span class="dot" style="background:${color}"></span>
+      <span class="name" style="color:${color}">${n}</span>
+      <span class="sym">${sym}</span>
+      <span class="state">${running?'● live':''} ${active?'✓':''}</span>
+    </div>`;
+  }).join('');
+
+  updateProjection();
+}
+
+function updateProjection(){
+  const balance = CALC.balance;
+  const riskUSD = balance * CALC.riskPct;
+  document.getElementById('proj-bal-display').textContent = '$'+fmtNum(balance);
+
+  // Aggregate metrics across selected engines
+  const selected = DATA.engines.filter(e => CALC.activeEngines.has(e.name) && e.closed_trades > 0);
+  const totalPips = selected.reduce((s,e)=>s + (e.net_pips||0), 0);
+  const totalTrades = selected.reduce((s,e)=>s + (e.closed_trades||0), 0);
+  const totalWins = selected.reduce((s,e)=>s + (e.wins||0), 0);
+  const totalLosses = selected.reduce((s,e)=>s + (e.losses||0), 0);
+  const wr = (totalWins+totalLosses) > 0 ? (totalWins/(totalWins+totalLosses)*100) : 0;
+  const avgWins = selected.flatMap(e => (DATA.feed || []).filter(f =>
+    engineFromSignalId(f.signal_id) === e.name && f.net_pips > 0
+  ).map(f => f.net_pips));
+  const avgLosses = selected.flatMap(e => (DATA.feed || []).filter(f =>
+    engineFromSignalId(f.signal_id) === e.name && f.net_pips <= 0 && f.outcome !== 'voided'
+  ).map(f => f.net_pips));
+  const avgW = avgWins.length ? avgWins.reduce((s,v)=>s+v,0)/avgWins.length : 0;
+  const avgL = avgLosses.length ? avgLosses.reduce((s,v)=>s+v,0)/avgLosses.length : 0;
+
+  // Calculate $ P&L for each engine (same formula as build_dashboard.py)
+  // For simplicity, use per-engine net_dollars from JSON if available, else compute
+  let totalUSD = 0;
+  let maxDDpips = 0;
+  selected.forEach(e => {
+    if(e.net_dollars !== undefined && e.net_dollars !== null){
+      totalUSD += e.net_dollars;
+    } else {
+      // Fallback: estimate
+      totalUSD += (e.net_pips || 0) * 0.01 * 10;  // rough
+    }
+    // Use max DD per engine (rough estimate)
+    const eFeed = (DATA.feed || [])
+      .filter(f => engineFromSignalId(f.signal_id) === e.name && f.status === 'closed')
+      .sort((a,b)=>new Date(a.closed_at)-new Date(b.closed_at));
+    let cum=0, peak=0, mdd=0;
+    for(const f of eFeed){ cum += f.net_pips; if(cum>peak)peak=cum; const dd=peak-cum; if(dd>mdd)mdd=dd; }
+    if(mdd > maxDDpips) maxDDpips = mdd;
+  });
+
+  const roi = balance > 0 ? (totalUSD / balance * 100) : 0;
+  const finalBalance = balance + totalUSD;
+  const mddUSD = (maxDDpips / Math.max(1,totalPips)) * Math.abs(totalUSD);  // proportional
+
+  // Update display
+  document.getElementById('proj-net-pips').textContent = fmtPips(totalPips);
+  document.getElementById('proj-net-pips').style.color = totalPips >= 0 ? 'var(--emerald-2)' : 'var(--red-2)';
+  document.getElementById('proj-pnl').textContent = fmtUSD(totalUSD);
+  document.getElementById('proj-pnl').style.color = totalUSD >= 0 ? 'var(--emerald-2)' : 'var(--red-2)';
+  document.getElementById('proj-roi').textContent = roi.toFixed(2) + '%';
+  document.getElementById('proj-roi').style.color = roi >= 0 ? 'var(--emerald-2)' : 'var(--red-2)';
+  document.getElementById('proj-risk').textContent = '$' + riskUSD.toFixed(2) + ' (' + (CALC.riskPct*100) + '% of balance)';
+  document.getElementById('proj-engines').textContent = selected.length;
+  document.getElementById('proj-wr').textContent = wr.toFixed(1) + '%';
+  document.getElementById('proj-avgw').textContent = fmtPips(avgW);
+  document.getElementById('proj-avgl').textContent = fmtPips(avgL);
+  document.getElementById('proj-trades').textContent = fmtNum(totalTrades);
+  document.getElementById('proj-mdd').textContent = fmtPips(-maxDDpips);
+  document.getElementById('proj-mdd-usd').textContent = '-$' + Math.abs(mddUSD).toFixed(2);
+  document.getElementById('proj-final').textContent = '$' + fmtNum(finalBalance.toFixed(2));
+  document.getElementById('proj-final').style.color = finalBalance >= balance ? 'var(--emerald-2)' : 'var(--red-2)';
+
+  // Projection donut — show per-engine contribution to P&L
+  const labels = selected.map(e => e.name);
+  const values = selected.map(e => Math.abs(e.net_pips || 0));
+  const colors = labels.map(l => engineColor(l));
+  const netPositive = totalUSD >= 0;
+  renderDoughnut('chart-projection', labels, values, colors, {
+    cutout: '60%',
+    legendPosition: 'right',
+    centerLabelText: netPositive ? 'PROJECTED P&L' : 'PROJECTED LOSS',
+    centerValue: fmtUSD(totalUSD),
+    centerSub: `${roi.toFixed(1)}% ROI · ${selected.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const total = vals.reduce((s,v)=>s+v, 0);
+      const pct = total ? ((vals[c.dataIndex]/total)*100).toFixed(1) : '0';
+      const e = selected[c.dataIndex];
+      return `${c.label}: ${fmtPips(e.net_pips)} pips (${pct}%)`;
+    }
+  });
+}
+
+// ─── Exposure donut ───────────────────────────────────────────
+function renderExposure(){
+  const open = (DATA.open_trades || []);
+  const counts = {};
+  open.forEach(t => { counts[t.engine] = (counts[t.engine] || 0) + 1; });
+  const labels = Object.keys(counts);
+  const values = labels.map(l => counts[l]);
+  const colors = labels.map(l => engineColor(l));
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-exposure', labels, values, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'OPEN POSITIONS',
+    centerValue: total,
+    centerSub: `${labels.length} engines`,
+    tooltipLabel: (c, lbls, vals)=>`${c.label}: ${vals[c.dataIndex]} open`
+  });
+  document.getElementById('exposure-meta').textContent = `${total} open`;
+}
+
+// ─── Symbol diversification ───────────────────────────────────
+function renderSymbolMix(){
+  const open = (DATA.open_trades || []);
+  const counts = {};
+  open.forEach(t => { counts[t.symbol] = (counts[t.symbol] || 0) + 1; });
+  const labels = Object.keys(counts);
+  const values = labels.map(l => counts[l]);
+  const symbolColors = {
+    XAUUSD: '#fbbf24', US30: '#ec4899', BTCUSD: '#f97316', SOLUSD: '#c084fc',
+    GBPJPY: '#ef4444', EURUSD: '#10b981', NAS100: '#00d4ff',
+  };
+  const colors = labels.map(l => symbolColors[l] || '#94a3b8');
+  const total = values.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-symbol', labels, values, colors, {
+    cutout: '62%',
+    legendPosition: 'right',
+    centerLabelText: 'OPEN BY SYMBOL',
+    centerValue: total,
+    centerSub: `${labels.length} symbols`,
+    tooltipLabel: (c, lbls, vals)=>`${c.label}: ${vals[c.dataIndex]} open`
+  });
+  document.getElementById('sym-meta').textContent = `${total} open`;
+}
+
+function renderCorrelation(){
   const engines = DATA.engines.map(e=>e.name);
   const dailyByEngine = {};
   for(const e of engines) dailyByEngine[e] = {};
-  // Build daily_pips per engine from daily_pnl
   const days = Object.keys(DATA.daily_pnl||{}).sort();
   for(const d of days){
     for(const e of engines){
@@ -246,13 +562,12 @@ function render(){
     const den = Math.sqrt(da*db);
     return den===0?0:num/den;
   }
-
   const grid = document.getElementById('correlation-grid');
   let html = '<table class="data-table" style="font-size:10px"><thead><tr><th></th>';
   for(const e of engines) html += `<th style="text-align:center;padding:6px">${e}</th>`;
   html += '</tr></thead><tbody>';
   for(const e1 of engines){
-    html += `<tr><td style="font-weight:600;color:${ENGINES.find(x=>x[0]===e1)?.[3]||'#888'}">${e1}</td>`;
+    html += `<tr><td style="font-weight:600;color:${engineColor(e1)}">${e1}</td>`;
     for(const e2 of engines){
       if(e1===e2){ html += '<td class="num muted">—</td>'; continue; }
       const series1 = days.map(d=>dailyByEngine[e1][d]);
@@ -267,6 +582,48 @@ function render(){
   html += '</tbody></table>';
   grid.innerHTML = html;
 }
+
+// ─── Event wiring ─────────────────────────────────────────────
+document.addEventListener('click', e=>{
+  // Engine toggle
+  const et = e.target.closest('.engine-toggle');
+  if(et){
+    const eng = et.dataset.engine;
+    if(CALC.activeEngines.has(eng)) CALC.activeEngines.delete(eng);
+    else CALC.activeEngines.add(eng);
+    renderCalc();
+    return;
+  }
+  // Balance preset
+  const balBtn = e.target.closest('.calc-toggle[data-bal]');
+  if(balBtn){
+    document.querySelectorAll('.calc-toggle[data-bal]').forEach(b => b.classList.remove('active'));
+    balBtn.classList.add('active');
+    CALC.balance = parseFloat(balBtn.dataset.bal);
+    document.getElementById('calc-balance').value = CALC.balance;
+    updateProjection();
+    return;
+  }
+  // Bulk select
+  if(e.target.id === 'calc-all'){
+    ENGINES.forEach(([n]) => CALC.activeEngines.add(n));
+    renderCalc();
+  } else if(e.target.id === 'calc-none'){
+    CALC.activeEngines.clear();
+    renderCalc();
+  } else if(e.target.id === 'calc-active'){
+    CALC.activeEngines.clear();
+    const ph = DATA?.process_health || {};
+    ENGINES.forEach(([n]) => { if(ph[n]?.running) CALC.activeEngines.add(n); });
+    renderCalc();
+  }
+});
+
+document.getElementById('calc-balance').addEventListener('input', e=>{
+  CALC.balance = parseFloat(e.target.value) || 0;
+  document.querySelectorAll('.calc-toggle[data-bal]').forEach(b => b.classList.remove('active'));
+  updateProjection();
+});
 
 window.onDataReady = render;
 initPage('risk');

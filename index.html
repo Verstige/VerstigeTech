@@ -93,7 +93,9 @@
         <p class="section-sub">Stacked by engine. Gold leader: <b id="leader-name">—</b></p>
       </div>
       <div class="glass" style="padding:24px">
-        <canvas id="chart-daily" height="120"></canvas>
+        <div class="donut-wrap" style="height:280px;position:relative">
+          <canvas id="chart-daily"></canvas>
+        </div>
       </div>
     </div>
   </section>
@@ -196,34 +198,31 @@ function render(){
 }
 
 function renderDailyChart(){
-  const ctx = document.getElementById('chart-daily').getContext('2d');
-  if(DAILY_CHART) DAILY_CHART.destroy();
-  const days = Object.keys(DATA.daily_pnl || {}).sort();
+  const daily = DATA.daily_pnl || {};
+  const days = Object.keys(daily).sort();
   if(!days.length){
-    ctx.canvas.parentElement.innerHTML += '<div style="padding:40px;text-align:center;color:var(--dim)">No closed trades in last 14 days</div>';
+    renderDoughnut('chart-daily', ['No data'], [1], ['#1f2937'], {centerLabelText:'14-DAY TOTAL',centerValue:'0',centerSub:'no data'});
     return;
   }
-  const datasets = ENGINES.map(([name,sym,label,color])=>({
-    label:name,
-    data:days.map(d => (DATA.daily_pnl[d] && DATA.daily_pnl[d][name]) ? DATA.daily_pnl[d][name].pips : 0),
-    backgroundColor:color,
-    borderColor:color,
-    stack:'pips',
-  }));
-  DAILY_CHART = new Chart(ctx,{
-    type:'bar',
-    data:{labels:days, datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,animation:false,
-      plugins:{
-        legend:{labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:11},boxWidth:12,padding:12}},
-        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtPips(c.parsed.y)} pips`}}
-      },
-      scales:{
-        x:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{display:false}},
-        y:{stacked:true,ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
-      }
-    }
+  // Sum each day's net pips across all engines
+  const dayVals = days.map(d => Object.values(daily[d]).reduce((s,v)=>s + (v.pips||0), 0));
+  const labels = days.map(d => {
+    const dt = new Date(d);
+    return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  });
+  const colors = dayVals.map(v => v >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)');
+  const total = dayVals.reduce((s,v)=>s+v, 0);
+
+  renderDoughnut('chart-daily', labels, dayVals.map(Math.abs), colors, {
+    cutout: '55%',
+    legendPosition: 'right',
+    centerLabelText: '14-DAY TOTAL',
+    centerValue: fmtPips(total),
+    centerSub: `${days.length} days`,
+    tooltipLabel: (c, lbls, vals)=>{
+      const sign = dayVals[c.dataIndex] >= 0 ? '+' : '−';
+      return `${c.label}: ${sign}${Math.abs(dayVals[c.dataIndex]).toFixed(1)} pips`;
+    },
   });
 }
 
