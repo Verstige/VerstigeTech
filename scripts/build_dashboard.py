@@ -298,35 +298,95 @@ def build_daily_pnl(cur, days=14):
     return daily
 
 
-def build_feed(cur, limit=200):
-    """Latest closed trades across all engines.
+def build_feed(cur, limit=1000):
+    """Complete trade ledger — all closed + all open trades across engines.
 
-    Note: limit is intentionally high (200) so we don't silently truncate
-    when daily volume grows past 50. The tradelog.html page handles its
-    own client-side pagination/filtering.
+    Three categories combined:
+      1. Closed trades from trade_outcomes (98 rows, May → Jun)
+      2. Currently OPEN trades from each engine's *_active_trades table
+      3. Pending signals (signal sent to Telegram, no outcome yet)
 
-    Includes ALL closed trades regardless of date — the tradelog is meant
-    to be a complete historical ledger. Per-engine stats still filter
-    out pre-fix trades (before 2026-06-12) to avoid the same-candle bug.
+    Result is sorted newest-first by timestamp. No artificial cutoff.
+    Per-engine prefix attribution is done client-side (ENGINE_PREFIX map).
+
+    Args:
+        limit: safety cap (1000) so a DB explosion can't OOM the JSON.
+               The real ledger is ~150 rows today.
     """
-    cur.execute(f'''
-        SELECT o.signal_id, o.outcome, o.net_pips, o.closed_at,
-               o.tp_hit, o.sl_hit, o.duration_minutes
-        FROM trade_outcomes o
-        ORDER BY o.closed_at DESC
-        LIMIT ?
-    ''', (limit,))
     feed = []
-    for r in cur.fetchall():
-        feed.append({
-            "signal_id": r[0],
-            "outcome": r[1],
-            "net_pips": r[2],
-            "closed_at": r[3],
-            "tp_hit": r[4],
-            "sl_hit": r[5],
-            "duration_min": r[6],
-        })
+
+    # 1. Closed trades — full history
+    try:
+        cur.execute('''
+            SELECT o.signal_id, o.outcome, o.net_pips, o.closed_at,
+                   o.tp_hit, o.sl_hit, o.duration_minutes, o.exit_price
+            FROM trade_outcomes o
+            ORDER BY o.closed_at DESC
+        ''')
+        for r in cur.fetchall():
+            feed.append({
+                "signal_id":   r[0],
+                "status":      "closed",
+                "outcome":     r[1],
+                "net_pips":    r[2] or 0,
+                "ts":          r[3],
+                "tp_hit":      r[4],
+                "sl_hit":      r[5],
+                "duration_min": r[6],
+                "exit_price":  r[7],
+                "sort_key":    r[3] or "",
+            })
+    except Exception:
+        pass
+
+    # 2. Currently open trades (every engine's *_active_trades table)
+    open_tables = [
+        ("NITRO",     "gold_active_trades",   "XAUUSD"),
+        ("FLUENCE",   "us30_active_trades",   "US30"),
+        ("CIPHER",    "btc_active_trades",    "BTCUSD"),
+        ("PHANTOM",   "sol_active_trades",    "SOLUSD"),
+        ("DRAGON",    "forex_dragon_active",  "GBPJPY"),
+        ("TITAN",     "forex_titan_active",   "EURUSD"),
+    ]
+    for eng_name, table, sym in open_tables:
+        try:
+            cur.execute(f'''
+                SELECT trade_id, direction, entry, sl, opened_at, score
+                FROM "{table}"
+                ORDER BY opened_at DESC
+            ''')
+            for r in cur.fetchall():
+                feed.append({
+                    "signal_id":   r[0],
+                    "status":      "open",
+                    "engine_hint": eng_name,
+                    "symbol_hint": sym,
+                    "outcome":     None,
+                    "net_pips":    None,
+                    "ts":          r[4],
+                    "tp_hit":      0,
+                    "sl_hit":      0,
+                    "duration_min": None,
+                    "direction":   r[1],
+                    "entry":       r[2],
+                    "sl":          r[3],
+                    "score":       r[5],
+                    "sort_key":    r[4] or "",
+                })
+        except Exception:
+            continue
+
+    # Sort newest-first by sort_key (string-comparable ISO timestamps)
+    feed.sort(key=lambda x: x.get("sort_key") or "", reverse=True)
+
+    # Apply safety cap (keep newest)
+    if len(feed) > limit:
+        feed = feed[:limit]
+
+    # Strip sort_key from output (internal only)
+    for f in feed:
+        f.pop("sort_key", None)
+
     return feed
 
 
@@ -520,8 +580,15 @@ def main():
         except Exception:
             continue
 
-    # Feed of recent closed trades
-    feed = build_feed(cur, limit=50)
+    # Feed of complete trade ledger (all closed + all open, no cutoff)
+    feed = build_feed(cur, limit=1000)
+
+    # Feed totals — for tradelog header display
+    feed_closed = [f for f in feed if f.get("status") == "closed"]
+    feed_open   = [f for f in feed if f.get("status") == "open"]
+    feed_dates = [f["ts"] for f in feed if f.get("ts")]
+    feed_first_ts = min(feed_dates) if feed_dates else None
+    feed_last_ts  = max(feed_dates) if feed_dates else None
 
     # Open trades
     open_trades = build_open_trades(cur)
@@ -566,6 +633,13 @@ def main():
         "engines": engines,
         "daily_pnl": daily,
         "feed": feed,
+        "feed_totals": {
+            "total":       len(feed),
+            "closed":      len(feed_closed),
+            "open":        len(feed_open),
+            "first_ts":    feed_first_ts,
+            "last_ts":     feed_last_ts,
+        },
         "open_trades": open_trades,
         "health": health,
         "telegram_health": telegram_health,

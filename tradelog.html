@@ -14,6 +14,12 @@
     outline:none;transition:all 0.15s ease;
   }
   .search-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,0.1)}
+  .date-input{
+    padding:10px 14px;background:var(--panel);border:1px solid var(--border);
+    border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:12px;
+    outline:none;color-scheme:dark;
+  }
+  .date-input:focus{border-color:var(--cyan)}
   .filter-chip{
     padding:6px 12px;border-radius:100px;
     background:transparent;border:1px solid var(--border-2);
@@ -22,7 +28,7 @@
   }
   .filter-chip:hover{border-color:var(--cyan);color:var(--cyan)}
   .filter-chip.active{background:var(--panel-2);border-color:var(--border-cyan);color:var(--cyan)}
-  .log-stats{display:flex;gap:24px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+  .log-stats{display:flex;gap:24px;padding:14px 18px;background:var(--panel);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-family:var(--font-mono);font-size:12px;color:var(--muted);flex-wrap:wrap}
   .log-stats strong{color:var(--text);font-weight:600}
   .log-table-wrap{max-height:70vh;overflow:auto;border:1px solid var(--border);border-radius:var(--radius)}
   .log-table{font-family:var(--font-mono);font-size:11px;width:100%;border-collapse:collapse}
@@ -33,6 +39,64 @@
   .log-table th.sorted .arrow{opacity:1;color:var(--cyan)}
   .log-table td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
   .log-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+  .log-table tbody tr.status-open{background:rgba(0,212,255,0.04)}
+  .log-table tbody tr.status-open:hover{background:rgba(0,212,255,0.08)}
+
+  /* Pagination */
+  .pagination{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;margin-top:16px;background:var(--panel);
+    border:1px solid var(--border);border-radius:8px;
+    font-family:var(--font-mono);font-size:12px;color:var(--muted);flex-wrap:wrap;gap:12px;
+  }
+  .page-btn{
+    padding:8px 14px;background:var(--panel-2);border:1px solid var(--border-2);
+    border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;
+    cursor:pointer;transition:all 0.15s ease;
+  }
+  .page-btn:hover:not(:disabled){border-color:var(--cyan);color:var(--cyan)}
+  .page-btn:disabled{opacity:0.3;cursor:not-allowed}
+  .page-info{color:var(--text)}
+  .page-info strong{color:var(--cyan)}
+
+  /* Live indicator */
+  .live-dot{
+    display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:var(--emerald-2);margin-right:6px;
+    animation:pulse 2s ease-in-out infinite;
+  }
+  .live-dot.stale{background:var(--amber)}
+  .live-dot.off{background:var(--red-2);animation:none}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,0.7)}50%{opacity:0.6;box-shadow:0 0 0 6px rgba(16,185,129,0)}}
+
+  .refresh-info{font-size:10px;color:var(--dim);letter-spacing:0.08em}
+  .refresh-info strong{color:var(--emerald-2)}
+
+  /* Date presets */
+  .date-presets{display:flex;gap:6px;flex-wrap:wrap}
+  .date-preset{
+    padding:6px 10px;background:transparent;border:1px solid var(--border-2);
+    border-radius:6px;color:var(--muted);font-family:var(--font-mono);font-size:11px;
+    cursor:pointer;transition:all 0.15s ease;
+  }
+  .date-preset:hover{border-color:var(--cyan);color:var(--cyan)}
+  .date-preset.active{background:var(--panel-2);border-color:var(--border-cyan);color:var(--cyan)}
+
+  .status-pill{
+    display:inline-block;padding:2px 8px;border-radius:4px;
+    font-size:9px;font-weight:700;letter-spacing:0.08em;
+  }
+  .status-pill.open{background:rgba(0,212,255,0.15);color:var(--cyan);border:1px solid rgba(0,212,255,0.3)}
+  .status-pill.closed-win{background:rgba(16,185,129,0.15);color:var(--emerald-2);border:1px solid rgba(16,185,129,0.3)}
+  .status-pill.closed-loss{background:rgba(239,68,68,0.15);color:var(--red-2);border:1px solid rgba(239,68,68,0.3)}
+  .status-pill.closed-voided{background:rgba(120,120,120,0.15);color:var(--dim);border:1px solid var(--border-2)}
+  .status-pill.closed-pending{background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3)}
+
+  .infinite-sentinel{
+    text-align:center;padding:16px;color:var(--dim);font-size:11px;
+    font-family:var(--font-mono);letter-spacing:0.05em;
+  }
+  .infinite-sentinel.loading{color:var(--cyan)}
 </style>
 </head>
 <body>
@@ -41,32 +105,93 @@
     <div class="container">
       <span class="eyebrow green">TRADE LOG</span>
       <h1>Every trade. <span class="gradient-text">Every detail.</span></h1>
-      <p>Search, sort, filter. The complete ledger of closed trades across all 9 engines.</p>
+      <p>Complete ledger of all closed + open trades across all 9 engines. Live data, auto-refreshing every 30s.</p>
+      <div class="refresh-info" style="margin-top:12px">
+        <span class="live-dot" id="live-dot"></span>
+        <span>LIVE · auto-refreshes every <strong>30s</strong></span>
+        <span style="margin-left:12px">·</span>
+        <span style="margin-left:12px">Last update: <strong id="last-update">—</strong></span>
+      </div>
     </div>
   </section>
 
   <section class="section" style="padding-top:20px">
     <div class="container">
 
+      <!-- View mode tabs -->
+      <div class="log-toolbar" style="border-bottom:1px solid var(--border);padding-bottom:16px">
+        <div class="date-presets" id="view-modes">
+          <div class="date-preset active" data-mode="paginated">📋 PAGES</div>
+          <div class="date-preset" data-mode="infinite">♾️ INFINITE SCROLL</div>
+        </div>
+        <div style="flex:1"></div>
+        <div class="refresh-info">Showing <strong id="visible-count">0</strong> of <strong id="total-count">0</strong> trades</div>
+      </div>
+
       <!-- Toolbar -->
       <div class="log-toolbar">
-        <input id="search" class="search-input" placeholder="Search signal ID, outcome, pips..." />
+        <input id="search" class="search-input" placeholder="🔍 Search signal ID, outcome, pips, symbol..." />
         <div id="engine-filters" class="flex gap-2"></div>
+        <select id="status-filter" class="search-input" style="max-width:160px">
+          <option value="">All statuses</option>
+          <option value="closed">✅ Closed only</option>
+          <option value="open">⏳ Open only</option>
+        </select>
         <select id="outcome-filter" class="search-input" style="max-width:140px">
           <option value="">All outcomes</option>
           <option value="win">Wins</option>
           <option value="loss">Losses</option>
+          <option value="voided">Voided</option>
         </select>
+      </div>
+
+      <!-- Date range -->
+      <div class="log-toolbar">
+        <div class="date-presets" id="date-presets">
+          <div class="date-preset active" data-preset="all">All time</div>
+          <div class="date-preset" data-preset="today">Today</div>
+          <div class="date-preset" data-preset="7d">Last 7d</div>
+          <div class="date-preset" data-preset="30d">Last 30d</div>
+          <div class="date-preset" data-preset="90d">Last 90d</div>
+        </div>
+        <input id="date-from" type="date" class="date-input" title="From" />
+        <span style="color:var(--dim)">→</span>
+        <input id="date-to" type="date" class="date-input" title="To" />
+        <button id="clear-dates" class="page-btn" style="font-size:10px;padding:6px 10px">Clear</button>
       </div>
 
       <div class="log-stats" id="log-stats"></div>
 
       <!-- Table -->
-      <div class="log-table-wrap">
+      <div class="log-table-wrap" id="table-wrap">
         <table class="log-table">
           <thead><tr id="log-thead"></tr></thead>
           <tbody id="log-tbody"></tbody>
         </table>
+        <div id="infinite-sentinel" style="display:none"></div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="pagination-bar">
+        <div class="page-info">
+          Page <strong id="cur-page">1</strong> of <strong id="total-pages">1</strong>
+          · <span id="page-range">—</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="page-btn" id="first-page">« First</button>
+          <button class="page-btn" id="prev-page">‹ Prev</button>
+          <button class="page-btn" id="next-page">Next ›</button>
+          <button class="page-btn" id="last-page">Last »</button>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--dim);margin-right:6px">Rows per page:</label>
+          <select id="page-size" class="page-btn" style="padding:6px 10px">
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200</option>
+          </select>
+        </div>
       </div>
 
     </div>
@@ -81,76 +206,105 @@ const ENGINE_PREFIX = {
   VOLTALITY:['VS_'], FLUENCE:['US30'],
 };
 function engineFromSignalId(sid){
-  if(!sid) return null;
+  if(!sid) return 'unknown';
   const s = String(sid).toUpperCase();
   for(const [eng, prefs] of Object.entries(ENGINE_PREFIX)){
     if(prefs.some(p => s.startsWith(p.toUpperCase()))) return eng;
   }
-  return null;
+  // FLUENCE uses US30_ prefix (underscore) — US30 alone catches it
+  if(/^US30_/i.test(sid)) return 'FLUENCE';
+  return 'unknown';
 }
 
-let FILTERED = [];
-let SORT = {col:'closed_at', dir:-1};
+// ─── State ─────────────────────────────────────────────────────
+let ALL_ROWS = [];         // Deduped, mapped rows
+let FILTERED = [];         // After filters
+let SORT = {col:'ts', dir:-1};
+let PAGE = 1;
+let PAGE_SIZE = 50;
+let VIEW_MODE = 'paginated';  // 'paginated' | 'infinite'
+let DATE_PRESET = 'all';
+let INFINITE_RENDERED = 0;  // How many rows rendered in infinite mode
+const INFINITE_CHUNK = 30;
 
-const COLS = [
-  {key:'signal_id', label:'Signal ID', sortable:true},
-  {key:'engine', label:'Engine', sortable:true},
-  {key:'outcome', label:'Outcome', sortable:true},
-  {key:'net_pips', label:'Net Pips', sortable:true, num:true},
-  {key:'tp_hit', label:'TP', sortable:true, num:true},
-  {key:'sl_hit', label:'SL', sortable:true},
-  {key:'duration_min', label:'Duration', sortable:true, num:true},
-  {key:'closed_at', label:'Closed', sortable:true},
-];
-
-function render(){
-  if(!DATA) return;
-
-  // Engine filter chips
-  // Engine filter chips — show count per engine
-    const counts = {};
-    for(const f of DATA.feed){
-      const e = engineFromSignalId(f.signal_id) || 'unknown';
-      counts[e] = (counts[e]||0)+1;
+// ─── Build rows (dedupe closed+open for same signal_id) ────────
+function buildRows(){
+  if(!DATA || !DATA.feed) return [];
+  const byId = new Map();
+  for(const f of DATA.feed){
+    const eng = f.engine_hint || engineFromSignalId(f.signal_id) || 'unknown';
+    // If we already have a row for this signal_id, prefer the closed one
+    const existing = byId.get(f.signal_id);
+    if(existing){
+      if(f.status === 'closed' && existing.status !== 'closed'){
+        byId.set(f.signal_id, {...f, engine: eng});
+      }
+      // else keep existing (open one is more recent info but we'll show closed when available)
+      continue;
     }
-    const totalCount = DATA.feed.length;
-    ef.innerHTML = `<div class="filter-chip active" data-engine="">ALL <span class="muted">· ${totalCount}</span></div>` +
-      ENGINES.map(([n])=>`<div class="filter-chip" data-engine="${n}">${n} <span class="muted">· ${counts[n]||0}</span></div>`).join('');
+    byId.set(f.signal_id, {...f, engine: eng});
+  }
+  return Array.from(byId.values()).sort((a,b)=>{
+    const ta = new Date(a.ts||0).getTime(), tb = new Date(b.ts||0).getTime();
+    return tb - ta;
+  });
+}
 
-  // Headers
+// ─── Render toolbar chips ─────────────────────────────────────
+function renderEngineChips(){
+  const ef = document.getElementById('engine-filters');
+  const counts = {};
+  for(const r of ALL_ROWS){ counts[r.engine] = (counts[r.engine]||0)+1; }
+  const total = ALL_ROWS.length;
+  ef.innerHTML = `<div class="filter-chip active" data-engine="">ALL · ${total}</div>` +
+    ENGINES.map(([n])=>`<div class="filter-chip" data-engine="${n}">${n} · ${counts[n]||0}</div>`).join('');
+}
+
+// ─── Headers ───────────────────────────────────────────────────
+function renderHeaders(){
   document.getElementById('log-thead').innerHTML = COLS.map(c=>
     `<th class="${SORT.col===c.key?'sorted':''}" data-col="${c.key}" style="${c.num?'text-align:right':''}">${c.label}<span class="arrow">${SORT.col===c.key?(SORT.dir>0?'▲':'▼'):'▼'}</span></th>`
   ).join('');
-
-  // Filter
-  applyFilters();
 }
 
+// ─── Apply all filters ────────────────────────────────────────
 function applyFilters(){
-  const q = document.getElementById('search').value.toLowerCase();
+  const q = document.getElementById('search').value.toLowerCase().trim();
   const activeEng = document.querySelector('#engine-filters .filter-chip.active')?.dataset.engine || '';
+  const status = document.getElementById('status-filter').value;
   const outcome = document.getElementById('outcome-filter').value;
 
-  let rows = DATA.feed.map(f=>({
-    ...f,
-    engine: engineFromSignalId(f.signal_id) || 'unknown',
-  }));
+  const dateFrom = document.getElementById('date-from').value;
+  const dateTo = document.getElementById('date-to').value;
+
+  let rows = ALL_ROWS.slice();
+
   if(activeEng) rows = rows.filter(r=>r.engine===activeEng);
+  if(status) rows = rows.filter(r=>r.status===status);
   if(outcome) rows = rows.filter(r=>r.outcome===outcome);
-  if(q) rows = rows.filter(r=>
+
+  // Date range — based on preset OR manual date inputs
+  const tsFrom = dateFrom ? new Date(dateFrom).getTime() : (DATE_PRESET_FROM || null);
+  const tsTo   = dateTo   ? new Date(dateTo).getTime() + 86400000 : (DATE_PRESET_TO || null);
+  if(tsFrom) rows = rows.filter(r => new Date(r.ts||0).getTime() >= tsFrom);
+  if(tsTo)   rows = rows.filter(r => new Date(r.ts||0).getTime() <= tsTo);
+
+  if(q) rows = rows.filter(r =>
     (r.signal_id||'').toLowerCase().includes(q) ||
     (r.outcome||'').toLowerCase().includes(q) ||
-    String(r.net_pips).includes(q) ||
-    (r.engine||'').toLowerCase().includes(q)
+    String(r.net_pips||'').includes(q) ||
+    (r.engine||'').toLowerCase().includes(q) ||
+    (r.symbol_hint||'').toLowerCase().includes(q) ||
+    (r.direction||'').toLowerCase().includes(q)
   );
 
   // Sort
   const col = SORT.col;
   rows.sort((a,b)=>{
     let va = a[col], vb = b[col];
-    if(col==='closed_at'){ va = new Date(va||0).getTime(); vb = new Date(vb||0).getTime(); }
+    if(col==='ts'){ va = new Date(va||0).getTime(); vb = new Date(vb||0).getTime(); }
     else if(col==='net_pips' || col==='duration_min'){ va = Number(va)||0; vb = Number(vb)||0; }
-    else if(col==='engine'){ va = String(va||''); vb = String(vb||''); }
+    else if(col==='engine' || col==='outcome' || col==='status'){ va = String(va||''); vb = String(vb||''); }
     else { va = String(va||'').toLowerCase(); vb = String(vb||'').toLowerCase(); }
     if(va<vb) return -1*SORT.dir;
     if(va>vb) return 1*SORT.dir;
@@ -158,67 +312,261 @@ function applyFilters(){
   });
 
   FILTERED = rows;
-  renderTable();
+  PAGE = 1;  // reset to first page on filter change
+  INFINITE_RENDERED = 0;
+  render();
+}
+
+// ─── Date preset state ────────────────────────────────────────
+let DATE_PRESET_FROM = null;
+let DATE_PRESET_TO = null;
+
+function applyDatePreset(preset){
+  DATE_PRESET = preset;
+  DATE_PRESET_FROM = null; DATE_PRESET_TO = null;
+  const now = new Date();
+  if(preset === 'today'){
+    const d = now.toISOString().split('T')[0];
+    document.getElementById('date-from').value = d;
+    document.getElementById('date-to').value = d;
+  } else if(preset === '7d'){
+    DATE_PRESET_FROM = now.getTime() - 7*86400000;
+  } else if(preset === '30d'){
+    DATE_PRESET_FROM = now.getTime() - 30*86400000;
+  } else if(preset === '90d'){
+    DATE_PRESET_FROM = now.getTime() - 90*86400000;
+  } else if(preset === 'all'){
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+  }
+  document.querySelectorAll('#date-presets .date-preset').forEach(p=>{
+    p.classList.toggle('active', p.dataset.preset === preset);
+  });
+  applyFilters();
+}
+
+// ─── Render table (paginated OR infinite) ─────────────────────
+function render(){
+  if(!DATA) return;
+  if(ALL_ROWS.length === 0) buildRows();
+  renderEngineChips();
+  renderHeaders();
+
+  const visibleCount = FILTERED.length;
+  document.getElementById('visible-count').textContent = fmtNum(visibleCount);
+  document.getElementById('total-count').textContent = fmtNum(ALL_ROWS.length);
+
+  if(VIEW_MODE === 'infinite'){
+    renderInfinite();
+  } else {
+    renderPaginated();
+  }
   renderStats();
 }
 
-function renderTable(){
+function renderPaginated(){
+  const totalPages = Math.max(1, Math.ceil(FILTERED.length / PAGE_SIZE));
+  if(PAGE > totalPages) PAGE = totalPages;
+  const start = (PAGE-1) * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, FILTERED.length);
+  const rows = FILTERED.slice(start, end);
+
   const tb = document.getElementById('log-tbody');
-  if(!FILTERED.length){
-    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:40px">No trades match your filters</td></tr>';
+  tb.innerHTML = rows.length === 0
+    ? '<tr><td colspan="' + COLS.length + '" style="text-align:center;color:var(--dim);padding:40px">No trades match your filters</td></tr>'
+    : rows.map(rowHtml).join('');
+
+  document.getElementById('cur-page').textContent = PAGE;
+  document.getElementById('total-pages').textContent = totalPages;
+  document.getElementById('page-range').textContent = FILTERED.length === 0
+    ? '0 trades'
+    : `${fmtNum(start+1)}–${fmtNum(end)} of ${fmtNum(FILTERED.length)}`;
+
+  document.getElementById('first-page').disabled = PAGE === 1;
+  document.getElementById('prev-page').disabled = PAGE === 1;
+  document.getElementById('next-page').disabled = PAGE >= totalPages;
+  document.getElementById('last-page').disabled = PAGE >= totalPages;
+
+  document.getElementById('pagination-bar').style.display = 'flex';
+  document.getElementById('infinite-sentinel').style.display = 'none';
+}
+
+function renderInfinite(){
+  // Render next chunk
+  const remaining = FILTERED.length - INFINITE_RENDERED;
+  if(remaining <= 0){
+    document.getElementById('infinite-sentinel').style.display = 'none';
     return;
   }
-  tb.innerHTML = FILTERED.map(r=>{
-    const eng = ENGINES.find(x=>x[0]===r.engine);
-    const color = eng?eng[3]:'#888';
-    const outcomeClass = r.outcome==='win'?'win':r.outcome==='loss'?'loss':'neutral';
-    return `<tr>
-      <td class="muted">${r.signal_id}</td>
-      <td><span style="color:${color};font-weight:600">${r.engine}</span></td>
-      <td><span class="pill ${outcomeClass}">${(r.outcome||'?').toUpperCase()}</span></td>
-      <td class="num ${r.net_pips>0?'positive':'negative'}" style="text-align:right">${fmtPips(r.net_pips)}</td>
-      <td class="num muted" style="text-align:right">${r.tp_hit||'—'}</td>
-      <td class="num muted" style="text-align:right">${r.sl_hit?'YES':'—'}</td>
-      <td class="num muted" style="text-align:right">${r.duration_min?Math.round(r.duration_min)+'m':'—'}</td>
-      <td class="muted small">${fmtTime(r.closed_at)}</td>
-    </tr>`;
-  }).join('');
+  const chunk = FILTERED.slice(INFINITE_RENDERED, INFINITE_RENDERED + INFINITE_CHUNK);
+  const tb = document.getElementById('log-tbody');
+  if(INFINITE_RENDERED === 0){
+    tb.innerHTML = chunk.length === 0
+      ? '<tr><td colspan="' + COLS.length + '" style="text-align:center;color:var(--dim);padding:40px">No trades match your filters</td></tr>'
+      : chunk.map(rowHtml).join('');
+  } else {
+    tb.insertAdjacentHTML('beforeend', chunk.map(rowHtml).join(''));
+  }
+  INFINITE_RENDERED += chunk.length;
+
+  const sentinel = document.getElementById('infinite-sentinel');
+  if(INFINITE_RENDERED < FILTERED.length){
+    sentinel.style.display = 'block';
+    sentinel.className = 'infinite-sentinel loading';
+    sentinel.textContent = `↓ Scroll for more · ${INFINITE_RENDERED} of ${FILTERED.length} loaded`;
+  } else {
+    sentinel.style.display = 'block';
+    sentinel.className = 'infinite-sentinel';
+    sentinel.textContent = `✓ End of ledger · ${FILTERED.length} trades shown`;
+  }
+  document.getElementById('pagination-bar').style.display = 'none';
+}
+
+// ─── Row HTML ─────────────────────────────────────────────────
+const COLS = [
+  {key:'signal_id', label:'Signal ID', sortable:true},
+  {key:'engine', label:'Engine', sortable:true},
+  {key:'status', label:'Status', sortable:true},
+  {key:'outcome', label:'Outcome', sortable:true},
+  {key:'net_pips', label:'Net Pips', sortable:true, num:true},
+  {key:'tp_hit', label:'TP', sortable:true, num:true},
+  {key:'sl_hit', label:'SL', sortable:true},
+  {key:'duration_min', label:'Duration', sortable:true, num:true},
+  {key:'ts', label:'Time', sortable:true},
+];
+
+function rowHtml(r){
+  const eng = ENGINES.find(x=>x[0]===r.engine);
+  const color = eng ? eng[3] : '#888';
+  const statusPill = renderStatusPill(r);
+
+  return `<tr class="status-${r.status}">
+    <td class="muted">${r.signal_id}</td>
+    <td><span style="color:${color};font-weight:600">${r.engine}</span></td>
+    <td>${statusPill}</td>
+    <td><span class="pill ${r.outcome==='win'?'win':r.outcome==='loss'?'loss':'neutral'}">${(r.outcome||'—').toUpperCase()}</span></td>
+    <td class="num ${(r.net_pips||0)>0?'positive':(r.net_pips||0)<0?'negative':''}" style="text-align:right">${r.net_pips!=null ? fmtPips(r.net_pips) : '—'}</td>
+    <td class="num muted" style="text-align:right">${r.tp_hit||'—'}</td>
+    <td class="num muted" style="text-align:right">${r.sl_hit?'YES':'—'}</td>
+    <td class="num muted" style="text-align:right">${r.duration_min?Math.round(r.duration_min)+'m':'—'}</td>
+    <td class="muted small">${fmtTime(r.ts)}</td>
+  </tr>`;
+}
+
+function renderStatusPill(r){
+  if(r.status === 'open') return `<span class="status-pill open">⏳ OPEN</span>`;
+  if(r.status === 'closed'){
+    if(r.outcome === 'win') return `<span class="status-pill closed-win">✓ WIN</span>`;
+    if(r.outcome === 'loss') return `<span class="status-pill closed-loss">✗ LOSS</span>`;
+    if(r.outcome === 'voided') return `<span class="status-pill closed-voided">VOID</span>`;
+    return `<span class="status-pill closed-pending">CLOSED</span>`;
+  }
+  return `<span class="status-pill closed-pending">${(r.status||'?').toUpperCase()}</span>`;
 }
 
 function renderStats(){
   const total = FILTERED.length;
-  const wins = FILTERED.filter(r=>r.net_pips>0).length;
-  const losses = FILTERED.filter(r=>r.net_pips<=0).length;
-  const pips = FILTERED.reduce((s,r)=>s+(r.net_pips||0),0);
-  const wr = total>0?(wins/total*100):0;
+  const wins = FILTERED.filter(r=>r.outcome==='win').length;
+  const losses = FILTERED.filter(r=>r.outcome==='loss').length;
+  const opens = FILTERED.filter(r=>r.status==='open').length;
+  const pips = FILTERED.reduce((s,r)=>s+(Number(r.net_pips)||0),0);
+  const wr = (wins+losses) > 0 ? (wins/(wins+losses)*100) : 0;
   document.getElementById('log-stats').innerHTML = `
     <span>Showing <strong>${fmtNum(total)}</strong> trades</span>
-    <span><strong style="color:var(--emerald-2)">${wins}</strong> wins · <strong style="color:var(--red-2)">${losses}</strong> losses</span>
+    <span><strong style="color:var(--emerald-2)">${wins}</strong> wins · <strong style="color:var(--red-2)">${losses}</strong> losses · <strong style="color:var(--cyan)">${opens}</strong> open</span>
     <span>WR <strong>${wr.toFixed(1)}%</strong></span>
     <span>Net <strong style="color:${pips>=0?'var(--emerald-2)':'var(--red-2)'}">${fmtPips(pips)}</strong> pips</span>
+    <span>Date range: <strong>${FILTERED.length?fmtDateShort(FILTERED[FILTERED.length-1].ts):'—'}</strong> → <strong>${FILTERED.length?fmtDateShort(FILTERED[0].ts):'—'}</strong></span>
   `;
 }
 
+// ─── Date formatters ────────────────────────────────────────────
+function fmtDateShort(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  if(isNaN(d)) return '—';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' +
+         d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ─── Live refresh ─────────────────────────────────────────────
+function startAutoRefresh(){
+  // site.js already refreshes DATA every 60s and fires window.onDataReady.
+  // We just need to update the visible "last update" timestamp here.
+  setInterval(()=>{
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+  }, 30000);
+}
+
+// ─── Event wiring ─────────────────────────────────────────────
 document.addEventListener('click', e=>{
-  const chip = e.target.closest('.filter-chip');
+  const chip = e.target.closest('#engine-filters .filter-chip');
   if(chip){
     document.querySelectorAll('#engine-filters .filter-chip').forEach(c=>c.classList.remove('active'));
     chip.classList.add('active');
     applyFilters();
+    return;
   }
   const th = e.target.closest('th[data-col]');
   if(th){
     const col = th.dataset.col;
     if(SORT.col===col) SORT.dir *= -1;
     else { SORT.col = col; SORT.dir = -1; }
+    applyFilters();
+    return;
+  }
+  if(e.target.id === 'first-page'){ PAGE = 1; renderPaginated(); }
+  else if(e.target.id === 'prev-page'){ PAGE = Math.max(1, PAGE-1); renderPaginated(); }
+  else if(e.target.id === 'next-page'){ PAGE = Math.min(Math.ceil(FILTERED.length/PAGE_SIZE), PAGE+1); renderPaginated(); }
+  else if(e.target.id === 'last-page'){ PAGE = Math.ceil(FILTERED.length/PAGE_SIZE); renderPaginated(); }
+  else if(e.target.id === 'clear-dates'){
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+    DATE_PRESET = 'all';
+    DATE_PRESET_FROM = null; DATE_PRESET_TO = null;
+    document.querySelectorAll('#date-presets .date-preset').forEach(p=>p.classList.toggle('active', p.dataset.preset==='all'));
+    applyFilters();
+  }
+  // Date presets
+  const presetChip = e.target.closest('#date-presets .date-preset');
+  if(presetChip){ applyDatePreset(presetChip.dataset.preset); return; }
+  // View mode
+  const viewChip = e.target.closest('#view-modes .date-preset');
+  if(viewChip){
+    VIEW_MODE = viewChip.dataset.mode;
+    document.querySelectorAll('#view-modes .date-preset').forEach(p=>p.classList.toggle('active', p===viewChip));
+    PAGE = 1; INFINITE_RENDERED = 0;
     render();
+    return;
   }
 });
 
 document.getElementById('search').addEventListener('input', applyFilters);
 document.getElementById('outcome-filter').addEventListener('change', applyFilters);
+document.getElementById('status-filter').addEventListener('change', applyFilters);
+document.getElementById('date-from').addEventListener('change', applyFilters);
+document.getElementById('date-to').addEventListener('change', applyFilters);
+document.getElementById('page-size').addEventListener('change', e=>{
+  PAGE_SIZE = parseInt(e.target.value, 10);
+  PAGE = 1;
+  render();
+});
 
-window.onDataReady = render;
+// Infinite scroll detection
+document.getElementById('table-wrap').addEventListener('scroll', e=>{
+  if(VIEW_MODE !== 'infinite') return;
+  const el = e.target;
+  if(el.scrollTop + el.clientHeight >= el.scrollHeight - 100){
+    renderInfinite();
+  }
+});
+
+window.onDataReady = () => {
+  ALL_ROWS = buildRows();
+  render();
+  startAutoRefresh();
+  document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+};
 initPage('tradelog');
 </script>
 
