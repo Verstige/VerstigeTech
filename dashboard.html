@@ -141,6 +141,64 @@
           </div>
         </div>
 
+        <!-- Section: Risk metrics KPIs -->
+        <div class="kpi-grid risk-kpis" style="margin-top:18px">
+          <div class="kpi-card accent-cyan">
+            <div class="label">Sharpe <span class="muted" style="font-weight:400">ratio</span></div>
+            <div class="value" id="risk-sharpe">—</div>
+            <div class="sub" id="risk-sharpe-sub">Annualized</div>
+          </div>
+          <div class="kpi-card accent-emerald">
+            <div class="label">Sortino <span class="muted" style="font-weight:400">ratio</span></div>
+            <div class="value" id="risk-sortino">—</div>
+            <div class="sub">Downside-only risk</div>
+          </div>
+          <div class="kpi-card accent-purple">
+            <div class="label">SQN</div>
+            <div class="value" id="risk-sqn">—</div>
+            <div class="sub" id="risk-sqn-sub">System Quality</div>
+          </div>
+          <div class="kpi-card accent-red">
+            <div class="label">Max Drawdown</div>
+            <div class="value" id="risk-maxdd">—</div>
+            <div class="sub" id="risk-maxdd-sub">Current: —</div>
+          </div>
+          <div class="kpi-card accent-gold">
+            <div class="label">Profit Factor</div>
+            <div class="value" id="risk-pf">—</div>
+            <div class="sub" id="risk-pf-sub">gross W / gross L</div>
+          </div>
+        </div>
+
+        <!-- Section: Equity curve + Drawdown chart -->
+        <div class="section-title">EQUITY CURVE &amp; DRAWDOWN</div>
+        <div class="chart-grid-2">
+          <div class="chart-card chart-wide">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Cumulative P&amp;L (Pips)</div>
+                <div class="chart-sub" id="equity-sub">Running total over time</div>
+              </div>
+              <div class="chart-meta" id="equity-meta">—</div>
+            </div>
+            <div class="chart-canvas-wrap" style="height:220px">
+              <canvas id="chart-equity"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Drawdown</div>
+                <div class="chart-sub">Peak-to-trough decline</div>
+              </div>
+              <div class="chart-meta" id="dd-meta">—</div>
+            </div>
+            <div class="chart-canvas-wrap" style="height:220px">
+              <canvas id="chart-dd"></canvas>
+            </div>
+          </div>
+        </div>
+
         <!-- Section: Portfolio composition (2 pies) -->
         <div class="section-title">PORTFOLIO COMPOSITION</div>
         <div class="chart-grid-2">
@@ -349,6 +407,7 @@ function render(){
   }
 
   // Render all charts
+  renderRiskMetrics();
   renderRank();
   renderWLDoughnut();
   renderDailyPie();
@@ -360,6 +419,152 @@ function render(){
   renderTG();
   // Feed
   renderFeed();
+}
+
+// ─── Equity curve (line chart) + drawdown area ───────────────────
+function renderRiskMetrics(){
+  if(!DATA.risk_metrics) return;
+  const rm = DATA.risk_metrics;
+  const eq = rm.equity_curve || [];
+  const dd = rm.drawdown_series || [];
+
+  // Risk KPI strip
+  setKPI('risk-sharpe', rm.sharpe, rm.sharpe > 2 ? 'positive' : rm.sharpe < 0 ? 'negative' : '');
+  setKPI('risk-sortino', rm.sortino, rm.sortino > 2 ? 'positive' : rm.sortino < 0 ? 'negative' : '');
+  setKPI('risk-sqn', rm.sqn, rm.sqn >= 2 ? 'positive' : rm.sqn < 1 ? 'negative' : '');
+  // SQN grading (Van Tharp)
+  const sqnGrade = rm.sqn >= 7 ? 'Holy Grail' : rm.sqn >= 5 ? 'Excellent' :
+                   rm.sqn >= 3 ? 'Good' : rm.sqn >= 2 ? 'Average' :
+                   rm.sqn >= 1 ? 'Below Avg' : 'Poor';
+  document.getElementById('risk-sqn-sub').textContent = sqnGrade;
+  setKPI('risk-maxdd', (rm.max_dd > 0 ? '−' : '') + rm.max_dd.toFixed(0) + 'p', '');
+  document.getElementById('risk-maxdd-sub').textContent = 'Current: ' + (rm.current_dd > 0 ? '−' : '') + rm.current_dd.toFixed(0) + ' pips';
+  const pf = rm.profit_factor;
+  setKPI('risk-pf', pf == null ? '∞' : pf.toFixed(2), pf === null || pf >= 1.5 ? 'positive' : pf < 1 ? 'negative' : '');
+  document.getElementById('risk-pf-sub').textContent = pf == null ? 'No losses' :
+    pf >= 2 ? 'Excellent' : pf >= 1.5 ? 'Good' : pf >= 1 ? 'Profitable' : 'Unprofitable';
+
+  // Equity curve line chart (LINE — not doughnut, because it's a time series)
+  const equityCanvas = document.getElementById('chart-equity');
+  if(equityCanvas && eq.length){
+    if(window.__charts && window.__charts['chart-equity']) window.__charts['chart-equity'].destroy();
+    const labels = eq.map(p => new Date(p.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    const values = eq.map(p => p.cum_pips);
+    // Color the line green if positive, red if negative
+    const lastVal = values[values.length-1];
+    const lineColor = lastVal >= 0 ? '#10b981' : '#ef4444';
+    const fillColor = lastVal >= 0 ? 'rgba(16,185,129,0.10)' : 'rgba(239,68,68,0.10)';
+    window.__charts['chart-equity'] = new Chart(equityCanvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Cumulative Pips',
+          data: values,
+          borderColor: lineColor,
+          backgroundColor: fillColor,
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: lineColor,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(10,15,25,0.95)',
+            titleColor: '#e2e8f0',
+            bodyColor: '#e2e8f0',
+            borderColor: lineColor,
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (c) => `Cum: ${fmtPips(c.parsed.y)} pips`
+            }
+          }
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }
+          }
+        }
+      }
+    });
+    document.getElementById('equity-meta').textContent = `${eq.length} trades · ${fmtPips(values[values.length-1])} pips`;
+  }
+
+  // Drawdown area chart
+  const ddCanvas = document.getElementById('chart-dd');
+  if(ddCanvas && dd.length){
+    if(window.__charts && window.__charts['chart-dd']) window.__charts['chart-dd'].destroy();
+    const labels = dd.map(p => new Date(p.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    const values = dd.map(p => -p.drawdown); // Negate so drawdown shows as negative area
+    window.__charts['chart-dd'] = new Chart(ddCanvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Drawdown',
+          data: values,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.15)',
+          fill: true,
+          tension: 0.2,
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(10,15,25,0.95)',
+            titleColor: '#e2e8f0',
+            bodyColor: '#e2e8f0',
+            borderColor: '#ef4444',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: (c) => `DD: ${(-c.parsed.y).toFixed(0)} pips`
+            }
+          }
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: {
+              color: '#94a3b8',
+              font: { family: 'JetBrains Mono', size: 10 },
+              callback: (v) => '−' + Math.abs(v).toFixed(0)
+            }
+          }
+        }
+      }
+    });
+    document.getElementById('dd-meta').textContent = `Max: −${rm.max_dd.toFixed(0)} pips`;
+  }
+}
+
+function setKPI(id, value, cls){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = value;
+  el.className = 'value ' + (cls || '');
 }
 
 // ─── Engine contribution doughnut (with profit-bar legend) ────
