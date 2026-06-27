@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-27T19:55:32.522549+00:00",
+  "generated_at": "2026-06-27T20:01:33.185977+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 624,
@@ -468,6 +468,23 @@
       "score": 4
     },
     {
+      "signal_id": "VST_1782495433252",
+      "status": "open",
+      "engine_hint": "NITRO",
+      "symbol_hint": "XAUUSD",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-26T17:37:14.878680+00:00",
+      "closed_at": "2026-06-26T17:37:14.878680+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "buy",
+      "entry": 4066.0,
+      "sl": 4056.0,
+      "score": 40
+    },
+    {
       "signal_id": "US30_1782490181",
       "status": "closed",
       "outcome": "loss",
@@ -630,6 +647,23 @@
       "score": 4
     },
     {
+      "signal_id": "VST_1782433226214",
+      "status": "open",
+      "engine_hint": "NITRO",
+      "symbol_hint": "XAUUSD",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-26T00:20:27.871812+00:00",
+      "closed_at": "2026-06-26T00:20:27.871812+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "buy",
+      "entry": 4024.5,
+      "sl": 4014.5,
+      "score": 80
+    },
+    {
       "signal_id": "CIPH_1782432013623",
       "status": "open",
       "engine_hint": "CIPHER",
@@ -790,6 +824,23 @@
       "sl_hit": 1,
       "duration_min": 2.7166666666666668e-06,
       "exit_price": 29191.92578125
+    },
+    {
+      "signal_id": "VST_1782395146886",
+      "status": "open",
+      "engine_hint": "NITRO",
+      "symbol_hint": "XAUUSD",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-25T13:45:48.438325+00:00",
+      "closed_at": "2026-06-25T13:45:48.438325+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "buy",
+      "entry": 4003.0,
+      "sl": 3993.0,
+      "score": 65
     },
     {
       "signal_id": "GBPJPY_1782394464",
@@ -2529,9 +2580,9 @@
     }
   ],
   "feed_totals": {
-    "total": 152,
+    "total": 155,
     "closed": 98,
-    "open": 54,
+    "open": 57,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
     "last_ts": "2026-06-27T00:31:20.578645+00:00"
   },
@@ -3875,7 +3926,8 @@
     "VOLTALITY": {
       "running": true,
       "pids": [
-        "78814"
+        "11314",
+        "11317"
       ],
       "runner": "voltality_runner.py"
     },

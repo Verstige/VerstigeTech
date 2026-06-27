@@ -6,19 +6,55 @@
    ───────────────────────────────────────────────────────────────────── */
 
 let DATA = null;
+let DATA_HASH = null;          // Cheap fingerprint to detect changes
+let LAST_CHANGE_AT = null;       // For "X seconds since last update" indicator
+let POLL_INTERVAL_MS = 5000;     // 5s polling (was 60s)
+let PREVIOUS_FEED_LEN = 0;       // Track new trades added
+let PREVIOUS_TOTAL_PIPS = 0;     // Track P&L changes for visual flash
 
 async function loadData(){
   try{
     const r = await fetch(`data/dashboard.json?t=${Date.now()}`);
     if(!r.ok) throw new Error('HTTP '+r.status);
-    DATA = await r.json();
-    if(window.onDataReady) window.onDataReady(DATA);
+    const newData = await r.json();
+    // Cheap fingerprint: key fields that change when trades happen
+    const fp = [
+      newData.generated_at,
+      newData.totals?.total_closed,
+      newData.totals?.total_open,
+      newData.totals?.net_pips,
+      (newData.feed||[]).length,
+      (newData.feed||[])[0]?.signal_id || '',
+      (newData.open_trades||[]).length,
+      JSON.stringify(newData.process_health || {}),
+    ].join('|');
+    const changed = DATA_HASH !== null && DATA_HASH !== fp;
+    DATA = newData;
+    DATA_HASH = fp;
+    if(window.onDataReady) window.onDataReady(DATA, changed);
     return DATA;
   }catch(e){
     console.error('Failed to load data:', e);
     if(window.onDataError) window.onDataError(e);
     return null;
   }
+}
+
+// Compute a diff summary for the change indicator
+function dataDiffSummary(oldData, newData){
+  if(!oldData) return null;
+  const oldClosed = oldData.totals?.total_closed || 0;
+  const newClosed = newData.totals?.total_closed || 0;
+  const oldOpen = oldData.totals?.total_open || 0;
+  const newOpen = newData.totals?.total_open || 0;
+  const oldPips = oldData.totals?.net_pips || 0;
+  const newPips = newData.totals?.net_pips || 0;
+  const changes = [];
+  if(newClosed > oldClosed) changes.push(`+${newClosed-oldClosed} closed`);
+  if(newOpen > oldOpen) changes.push(`+${newOpen-oldOpen} open`);
+  if(newOpen < oldOpen) changes.push(`${newOpen-oldOpen} closed-to-open`);
+  if(Math.abs(newPips - oldPips) > 0.5) changes.push(`pips ${newPips>=oldPips?'+':''}${(newPips-oldPips).toFixed(1)}`);
+  return changes.length ? changes.join(' · ') : null;
 }
 
 // ── Number formatters ───────────────────────────────────────────────
@@ -278,6 +314,33 @@ function showToast(msg, isError){
   setTimeout(()=>t.classList.remove('show'), 2500);
 }
 
+// Visual flash when data changes — shows a quick pill + optional sound
+window.flashChange = function(summary){
+  // Don't fire on the very first load (DATA was null)
+  if(!DATA) return;
+  // Toast
+  showToast('⚡ LIVE UPDATE · ' + summary);
+  // Pulse the live pill in the hero
+  const pill = document.querySelector('.live-pill');
+  if(pill){
+    pill.classList.remove('flash');
+    void pill.offsetWidth; // reflow to restart animation
+    pill.classList.add('flash');
+    setTimeout(()=>pill.classList.remove('flash'), 1500);
+  }
+  // Brief flash on body — green for positive, red for negative pips delta
+  const oldData = window.__lastData;
+  const newPips = DATA.totals?.net_pips || 0;
+  const oldPips = oldData?.totals?.net_pips || 0;
+  const flashColor = newPips > oldPips ? 'rgba(16,185,129,0.04)' : newPips < oldPips ? 'rgba(239,68,68,0.04)' : null;
+  if(flashColor){
+    document.body.style.transition = 'background-color 0.3s ease';
+    document.body.style.backgroundColor = flashColor;
+    setTimeout(()=>{ document.body.style.backgroundColor = ''; }, 400);
+  }
+  window.__lastData = JSON.parse(JSON.stringify(DATA));
+};
+
 // ── Init helpers ────────────────────────────────────────────────────
 function initPage(activePage){
   // Inject nav, footer, code rain
@@ -312,11 +375,32 @@ document.addEventListener('click', e=>{
   }
 });
 
-// Auto-refresh every 60s
-setInterval(()=>loadData().then(d=>{
-  if(d && window.onDataReady){
-    window.onDataReady(d);
-    const el = document.getElementById('last-update');
-    if(el) el.textContent = 'Updated '+new Date(d.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+// Smart polling: 5s with change detection — only re-renders on actual data change.
+// We fetch the JSON every 5s but compute a cheap fingerprint first; if it's
+// identical to the previous fetch we skip the re-render (saves CPU + avoids flicker).
+setInterval(async ()=>{
+  const prev = DATA;
+  await loadData();
+  const d = DATA;
+  if(!d || !window.onDataReady) return;
+  const fp = DATA_HASH;
+  // loadData already triggered onDataReady only when DATA changed, so by here
+  // the page has already re-rendered if needed. We just update the chrome.
+  const el = document.getElementById('last-update');
+  if(el) el.textContent = 'Updated '+new Date(d.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  // Update "time since last change" indicator if present
+  const tsi = document.getElementById('time-since-update');
+  if(tsi){
+    const now = Date.now();
+    const updatedAt = new Date(d.generated_at).getTime();
+    const seconds = Math.floor((now - updatedAt) / 1000);
+    if(seconds < 60) tsi.textContent = `${seconds}s ago`;
+    else if(seconds < 3600) tsi.textContent = `${Math.floor(seconds/60)}m ago`;
+    else tsi.textContent = new Date(d.generated_at).toLocaleTimeString();
   }
-}), 60000);
+  // Show toast for any newly-added trade (only on actual change)
+  const summary = dataDiffSummary(prev, d);
+  if(summary && window.flashChange){
+    window.flashChange(summary);
+  }
+}, POLL_INTERVAL_MS);
