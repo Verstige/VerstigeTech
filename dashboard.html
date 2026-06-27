@@ -230,6 +230,10 @@
               <tbody id="feed-tbody"></tbody>
             </table>
           </div>
+          <div style="padding:14px 24px;background:var(--panel-solid);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+            <span class="muted small mono">All-time ledger</span>
+            <span class="muted small mono"><strong id="alltime-count">—</strong> closed · <strong id="alltime-pips">—</strong> pips · <strong id="alltime-wr">—</strong>% WR</span>
+          </div>
         </div>
 
       </div>
@@ -537,28 +541,56 @@ function renderTG(){
 
 function renderFeed(){
   const tb = document.getElementById('feed-tbody');
-  let rows = (DATA.feed || []).filter(f => f.status === 'closed').slice(0,100);
+  // Show ALL closed trades from the feed (not filtered by post-fix cutoff)
+  let allClosed = (DATA.feed || []).filter(f => f.status === 'closed');
+  let rows = allClosed.slice(0,100);
   if(ACTIVE_FILTER){
     rows = rows.filter(f => engineFromSignalId(f.signal_id) === ACTIVE_FILTER);
   }
-  if(!rows.length){ tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:24px">No closed trades</td></tr>'; return; }
-  tb.innerHTML = rows.map(t=>{
-    const eng = engineFromSignalId(t.signal_id) || 'unknown';
-    const filtered = ACTIVE_FILTER && eng === ACTIVE_FILTER;
-    const dimmed = ACTIVE_FILTER && eng !== ACTIVE_FILTER;
-    const color = ENGINES.find(e=>e[0]===eng)?.[3] || 'var(--muted)';
-    return `<tr style="${filtered?'background:rgba(0,212,255,0.04)':''};${dimmed?'opacity:0.3':''}">
-      <td class="muted small">${t.signal_id}</td>
-      <td><span style="color:${color};font-weight:600">${eng}</span></td>
-      <td><span class="pill ${t.outcome==='win'?'win':t.outcome==='loss'?'loss':'neutral'}">${(t.outcome||'?').toUpperCase()}</span></td>
-      <td class="num ${t.net_pips>0?'positive':'negative'}">${fmtPips(t.net_pips)}</td>
-      <td class="num muted">${t.tp_hit||'—'}</td>
-      <td class="num muted">${t.sl_hit?'YES':'NO'}</td>
-      <td class="num muted">${t.duration_min?Math.round(t.duration_min)+'m':'—'}</td>
-      <td class="muted small">${fmtTime(t.closed_at)}</td>
-    </tr>`;
-  }).join('');
-  document.getElementById('feed-count-label').textContent = `${rows.length} TRADES`;
+  if(!rows.length){ tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:24px">No closed trades</td></tr>'; }
+  else {
+    tb.innerHTML = rows.map(t=>{
+      const eng = engineFromSignalId(t.signal_id) || 'unknown';
+      const filtered = ACTIVE_FILTER && eng === ACTIVE_FILTER;
+      const dimmed = ACTIVE_FILTER && eng !== ACTIVE_FILTER;
+      const color = ENGINES.find(e=>e[0]===eng)?.[3] || 'var(--muted)';
+      const ts = t.closed_at || t.ts;
+      const durMin = t.duration_min;
+      let durLabel = '—';
+      if(durMin != null && durMin > 0){
+        if(durMin < 1){ durLabel = Math.round(durMin*60) + 's'; }
+        else if(durMin < 60){ durLabel = Math.round(durMin) + 'm'; }
+        else { durLabel = Math.floor(durMin/60) + 'h' + Math.round(durMin%60) + 'm'; }
+      }
+      return `<tr style="${filtered?'background:rgba(0,212,255,0.04)':''};${dimmed?'opacity:0.3':''}">
+        <td class="muted small">${t.signal_id}</td>
+        <td><span style="color:${color};font-weight:600">${eng}</span></td>
+        <td><span class="pill ${t.outcome==='win'?'win':t.outcome==='loss'?'loss':'neutral'}">${(t.outcome||'?').toUpperCase()}</span></td>
+        <td class="num ${t.net_pips>0?'positive':'negative'}">${fmtPips(t.net_pips)}</td>
+        <td class="num muted">${t.tp_hit?'YES':'—'}</td>
+        <td class="num muted">${t.sl_hit?'YES':'—'}</td>
+        <td class="num muted">${durLabel}</td>
+        <td class="muted small">${fmtTime(ts)}</td>
+      </tr>`;
+    }).join('');
+  }
+  // Update header label: show how many we're displaying vs total
+  const displayLabel = ACTIVE_FILTER
+    ? `${rows.length} / ${allClosed.length} closed · ${ACTIVE_FILTER} only`
+    : `${rows.length} of ${allClosed.length} closed`;
+  document.getElementById('feed-count-label').textContent = displayLabel;
+
+  // All-time ledger totals (full feed, no filter)
+  const wins = allClosed.filter(f => f.outcome === 'win').length;
+  const losses = allClosed.filter(f => f.outcome === 'loss').length;
+  const totalPips = allClosed.reduce((s,f) => s + (Number(f.net_pips) || 0), 0);
+  const wr = (wins + losses) > 0 ? (wins / (wins + losses) * 100) : 0;
+  document.getElementById('alltime-count').textContent = allClosed.length;
+  document.getElementById('alltime-pips').textContent = (totalPips >= 0 ? '+' : '') + totalPips.toFixed(1);
+  document.getElementById('alltime-wr').textContent = wr.toFixed(1);
+  // Color the all-time pips
+  const ap = document.getElementById('alltime-pips');
+  if(ap) ap.style.color = totalPips >= 0 ? 'var(--emerald-2)' : 'var(--red-2)';
 }
 
 document.addEventListener('click', e=>{
