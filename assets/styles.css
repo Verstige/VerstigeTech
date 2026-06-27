@@ -418,8 +418,30 @@ canvas{max-width:100%}
   opacity:0;transform:translateY(10px);
   transition:all 0.3s ease;z-index:100;
   backdrop-filter:blur(8px);
+  max-width:380px;line-height:1.5;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--cyan-glow);
 }
 .toast.show{opacity:1;transform:translateY(0)}
+
+/* ── Real-time change flash ────────────────────────────────────── */
+@keyframes flashPill{
+  0%{box-shadow:0 0 0 0 var(--cyan-glow),0 0 0 4px rgba(0,212,255,0.3)}
+  100%{box-shadow:0 0 0 8px transparent,0 0 0 0 transparent}
+}
+.live-pill.flash{animation:flashPill 1.5s ease-out}
+.live-pill.flash::before{animation:pulseStrong 0.6s ease-in-out 3 !important}
+
+@keyframes pulseStrong{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.4;transform:scale(1.4)}
+}
+
+/* Time-since-update indicator */
+.time-since{
+  font-family:var(--font-mono);font-size:10px;
+  color:var(--dim);letter-spacing:0.05em;
+}
+.time-since.fresh{color:var(--emerald-2)}
 
 /* ── DESIGN POLISH — high-end trading dashboard ─────────────────────── */
 

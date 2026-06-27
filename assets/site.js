@@ -29,9 +29,15 @@ async function loadData(){
       JSON.stringify(newData.process_health || {}),
     ].join('|');
     const changed = DATA_HASH !== null && DATA_HASH !== fp;
+    const prev = DATA;
     DATA = newData;
     DATA_HASH = fp;
     if(window.onDataReady) window.onDataReady(DATA, changed);
+    // Fire flash if data changed and the polling interval hasn't already done so
+    if(changed && prev && window.flashChange){
+      const summary = dataDiffSummary(prev, newData);
+      if(summary) window.flashChange(summary);
+    }
     return DATA;
   }catch(e){
     console.error('Failed to load data:', e);
@@ -338,8 +344,33 @@ window.flashChange = function(summary){
     document.body.style.backgroundColor = flashColor;
     setTimeout(()=>{ document.body.style.backgroundColor = ''; }, 400);
   }
+  // Update time-since indicator if present
+  updateTimeSince();
   window.__lastData = JSON.parse(JSON.stringify(DATA));
 };
+
+// Update "time since update" indicator — injected next to hero-update if not present
+function updateTimeSince(){
+  let tsi = document.getElementById('time-since-update');
+  const hero = document.getElementById('hero-update') || document.getElementById('last-update');
+  if(!hero) return;
+  if(!tsi){
+    tsi = document.createElement('span');
+    tsi.id = 'time-since-update';
+    tsi.className = 'time-since';
+    tsi.style.marginLeft = '8px';
+    hero.parentNode.insertBefore(tsi, hero.nextSibling);
+  }
+  if(!DATA || !DATA.generated_at){ tsi.textContent = ''; return; }
+  const updatedAt = new Date(DATA.generated_at).getTime();
+  const seconds = Math.floor((Date.now() - updatedAt) / 1000);
+  if(seconds < 5){ tsi.textContent = '· just now'; tsi.className = 'time-since fresh'; }
+  else if(seconds < 60){ tsi.textContent = `· ${seconds}s ago`; tsi.className = 'time-since fresh'; }
+  else if(seconds < 3600){ tsi.textContent = `· ${Math.floor(seconds/60)}m ago`; tsi.className = 'time-since'; }
+  else { tsi.textContent = `· ${Math.floor(seconds/3600)}h ago`; tsi.className = 'time-since'; }
+}
+// Refresh time-since indicator every second (cheap DOM update)
+setInterval(updateTimeSince, 1000);
 
 // ── Init helpers ────────────────────────────────────────────────────
 function initPage(activePage){
@@ -379,28 +410,10 @@ document.addEventListener('click', e=>{
 // We fetch the JSON every 5s but compute a cheap fingerprint first; if it's
 // identical to the previous fetch we skip the re-render (saves CPU + avoids flicker).
 setInterval(async ()=>{
-  const prev = DATA;
-  await loadData();
+  await loadData();  // loadData handles change detection + flash internally
   const d = DATA;
-  if(!d || !window.onDataReady) return;
-  const fp = DATA_HASH;
-  // loadData already triggered onDataReady only when DATA changed, so by here
-  // the page has already re-rendered if needed. We just update the chrome.
+  if(!d) return;
   const el = document.getElementById('last-update');
   if(el) el.textContent = 'Updated '+new Date(d.generated_at).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  // Update "time since last change" indicator if present
-  const tsi = document.getElementById('time-since-update');
-  if(tsi){
-    const now = Date.now();
-    const updatedAt = new Date(d.generated_at).getTime();
-    const seconds = Math.floor((now - updatedAt) / 1000);
-    if(seconds < 60) tsi.textContent = `${seconds}s ago`;
-    else if(seconds < 3600) tsi.textContent = `${Math.floor(seconds/60)}m ago`;
-    else tsi.textContent = new Date(d.generated_at).toLocaleTimeString();
-  }
-  // Show toast for any newly-added trade (only on actual change)
-  const summary = dataDiffSummary(prev, d);
-  if(summary && window.flashChange){
-    window.flashChange(summary);
-  }
+  updateTimeSince();
 }, POLL_INTERVAL_MS);
