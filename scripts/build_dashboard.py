@@ -184,30 +184,35 @@ def fetch_engine_stats(cur, name, sig_table, act_table, symbol):
             pass
 
     # ── Closed trades: pull ALL outcomes and route by signal_id prefix ──
-    # Build the engine's signal_id prefix list
+    # Build the engine's signal_id prefix list. NOTE: VST_ (NITRO, length 4) and
+    # VS_ (VOLTALITY, length 3) are DISTINCT prefixes — don't mix them up.
     prefix_map = {
-        "NITRO":     ["VST_", "XAU", "GOLD"],
+        "NITRO":     ["VST_"],
         "SURGE":     [],   # SURGE doesn't write to trade_outcomes (canonical conflict)
         "DRAGON":    ["GBPJPY"],
-        "TITAN":     ["EURUSD", "EUR_"],
-        "CIPHER":    ["CIPH_", "BTC"],
-        "PHANTOM":   ["SOL"],
+        "TITAN":     ["EURUSD"],
+        "CIPHER":    ["CIPH_", "BTCUSD_"],
+        "PHANTOM":   ["PHNTM_", "SOLUSD_"],
         "NEXUS":     ["NAS", "NDX", "NEXUS"],
         "VOLTALITY": ["VS_"],
         "FLUENCE":   ["US30"],
     }
     prefixes = prefix_map.get(name, [])
 
+    # Note: per-engine stats filter out pre-fix trades (before 2026-06-12) since
+    # those had a known same-candle bug. The full feed still includes them so
+    # the tradelog shows complete history — but per-engine stats stay clean.
+    cutoff = '2026-06-12'
+
     try:
         if prefixes:
-            # Build WHERE clause with LIKE for each prefix
             where_parts = " OR ".join([f"o.signal_id LIKE '{p}%'" for p in prefixes])
             cur.execute(f'''
                 SELECT o.signal_id, o.outcome, o.net_pips, o.exit_price,
                        o.closed_at, o.tp_hit, o.sl_hit
                 FROM trade_outcomes o
                 WHERE ({where_parts})
-                  AND o.closed_at > '2026-06-12'
+                  AND o.closed_at > '{cutoff}'
                 ORDER BY o.closed_at DESC
             ''')
         else:
@@ -293,27 +298,207 @@ def build_daily_pnl(cur, days=14):
     return daily
 
 
-def build_feed(cur, limit=50):
-    """Latest closed trades across all engines."""
-    cur.execute(f'''
-        SELECT o.signal_id, o.outcome, o.net_pips, o.closed_at,
-               o.tp_hit, o.sl_hit, o.duration_minutes
-        FROM trade_outcomes o
-        WHERE o.closed_at > '2026-06-12'
-        ORDER BY o.closed_at DESC
-        LIMIT ?
-    ''', (limit,))
+def build_feed(cur, limit=1000):
+    """Complete trade ledger — all closed + all open trades across engines.
+
+    Three categories combined:
+      1. Closed trades from trade_outcomes (98 rows, May → Jun)
+      2. Currently OPEN trades from each engine's *_active_trades table
+      3. Pending signals (signal sent to Telegram, no outcome yet)
+
+    Result is sorted newest-first by timestamp. No artificial cutoff.
+    Per-engine prefix attribution is done client-side (ENGINE_PREFIX map).
+
+    Args:
+        limit: safety cap (1000) so a DB explosion can't OOM the JSON.
+               The real ledger is ~150 rows today.
+    """
     feed = []
-    for r in cur.fetchall():
-        feed.append({
-            "signal_id": r[0],
-            "outcome": r[1],
-            "net_pips": r[2],
-            "closed_at": r[3],
-            "tp_hit": r[4],
-            "sl_hit": r[5],
-            "duration_min": r[6],
-        })
+
+    # 1. Closed trades — full history
+    try:
+        cur.execute('''
+            SELECT o.signal_id, o.outcome, o.net_pips, o.closed_at,
+                   o.tp_hit, o.sl_hit, o.duration_minutes, o.exit_price
+            FROM trade_outcomes o
+            ORDER BY o.closed_at DESC
+        ''')
+        for r in cur.fetchall():
+            feed.append({
+                "signal_id":   r[0],
+                "status":      "closed",
+                "outcome":     r[1],
+                "net_pips":    r[2] or 0,
+                "ts":          r[3],
+                "closed_at":   r[3],   # alias for dashboard pages
+                "tp_hit":      r[4],
+                "sl_hit":      r[5],
+                "duration_min": r[6],
+                "exit_price":  r[7],
+                "sort_key":    r[3] or "",
+            })
+    except Exception:
+        pass
+
+    # 2. Currently open trades (every engine's *_active_trades table OR signal table)
+    # NOTE: NITRO stores open trades in `signals` table with is_active=1
+    # (gold_active_trades is empty — NITRO doesn't use it for active tracking).
+    # SURGE also writes to signals table with is_active=1.
+    # NEXUS uses nexus_signals; VOLTALITY uses vs_signals (status varies).
+    # Each engine uses a slightly different schema — we adapt per engine.
+    open_sources = [
+        # (engine, table, symbol, status_filter, sl_col, score_col, id_col, ts_col)
+        ("NITRO",     "gold_active_trades",   "XAUUSD",  None,  "sl",  None,        "trade_id", "opened_at"),
+        ("FLUENCE",   "us30_active_trades",   "US30",    None,  "sl",  "score",     "trade_id", "opened_at"),
+        ("CIPHER",    "btc_active_trades",    "BTCUSD",  None,  "sl",  "score",     "trade_id", "opened_at"),
+        ("PHANTOM",   "sol_active_trades",    "SOLUSD",  None,  "sl",  "score",     "trade_id", "opened_at"),
+        ("DRAGON",    "forex_dragon_active",  "GBPJPY",  None,  "sl",  "score",     "trade_id", "opened_at"),
+        ("TITAN",     "forex_titan_active",   "EURUSD",  None,  "sl",  "score",     "trade_id", "opened_at"),
+        # Signal-table-based engines
+        # NITRO + SURGE both write to signals; use is_active=1 for NITRO, sent_to_telegram=0 for SURGE.
+        # NEXUS uses nexus_signals.status (string, not enum).
+        # VOLTALITY uses vs_signals.status.
+    ]
+    for eng_name, table, sym, status_filter, sl_col, score_col, id_col, ts_col in open_sources:
+        try:
+            score_select = f", {score_col} AS score" if score_col else ", NULL AS score"
+            cur.execute(f'''
+                SELECT {id_col} AS sig_id, direction, entry, {sl_col} AS sl, {ts_col} AS ts{score_select}
+                FROM "{table}"
+                ORDER BY {ts_col} DESC
+            ''')
+            for r in cur.fetchall():
+                sig_id, direction, entry, sl, ts, score = r
+                feed.append({
+                    "signal_id":   sig_id,
+                    "status":      "open",
+                    "engine_hint": eng_name,
+                    "symbol_hint": sym,
+                    "outcome":     None,
+                    "net_pips":    None,
+                    "ts":          ts,
+                    "closed_at":   ts,
+                    "tp_hit":      0,
+                    "sl_hit":      0,
+                    "duration_min": None,
+                    "direction":   direction,
+                    "entry":       entry,
+                    "sl":          sl,
+                    "score":       score,
+                    "sort_key":    ts or "",
+                })
+        except Exception:
+            continue
+
+    # NITRO + SURGE share the `signals` table. NITRO uses id prefix VST_, SURGE different.
+    try:
+        cur.execute('''
+            SELECT id, direction, entry, stop_loss, created_at, confluence_score, id
+            FROM signals
+            WHERE is_active = 1
+              AND id LIKE 'VST_%'
+            ORDER BY created_at DESC
+        ''')
+        for r in cur.fetchall():
+            sig_id, direction, entry, sl, ts, score, _id = r
+            feed.append({
+                "signal_id":   sig_id,
+                "status":      "open",
+                "engine_hint": "NITRO",
+                "symbol_hint": "XAUUSD",
+                "outcome":     None,
+                "net_pips":    None,
+                "ts":          ts,
+                "closed_at":   ts,
+                "tp_hit":      0,
+                "sl_hit":      0,
+                "duration_min": None,
+                "direction":   direction,
+                "entry":       entry,
+                "sl":          sl,
+                "score":       score,
+                "sort_key":    ts or "",
+            })
+    except Exception:
+        pass
+
+    # NEXUS: any signal not in a terminal status
+    try:
+        cur.execute('''
+            SELECT id, direction, entry, sl, created_at, confluence_score, status
+            FROM nexus_signals
+            WHERE status NOT IN ('SL HIT','TP1 HIT','TP2 HIT','TP3 HIT','TP1+TP2 BE HIT',
+                                 'PRICE REVERSED TO TP1','PRICE REVERSED TO BE',
+                                 'closed','closed_stale','VOIDED')
+            ORDER BY created_at DESC
+        ''')
+        for r in cur.fetchall():
+            sig_id, direction, entry, sl, ts, score, _status = r
+            feed.append({
+                "signal_id":   sig_id,
+                "status":      "open",
+                "engine_hint": "NEXUS",
+                "symbol_hint": "NAS",
+                "outcome":     None,
+                "net_pips":    None,
+                "ts":          ts,
+                "closed_at":   ts,
+                "tp_hit":      0,
+                "sl_hit":      0,
+                "duration_min": None,
+                "direction":   direction,
+                "entry":       entry,
+                "sl":          sl,
+                "score":       score,
+                "sort_key":    ts or "",
+            })
+    except Exception:
+        pass
+
+    # VOLTALITY: vs_signals in non-terminal status
+    try:
+        cur.execute('''
+            SELECT id, direction, entry, sl, created_at, confluence_score, status
+            FROM vs_signals
+            WHERE status NOT IN ('SL HIT','TP1 HIT','TP2 HIT','TP3 HIT','TP1+TP2 BE HIT',
+                                 'PRICE REVERSED TO TP1','PRICE REVERSED TO BE',
+                                 'closed','closed_stale','VOIDED')
+            ORDER BY created_at DESC
+        ''')
+        for r in cur.fetchall():
+            sig_id, direction, entry, sl, ts, score, _status = r
+            feed.append({
+                "signal_id":   sig_id,
+                "status":      "open",
+                "engine_hint": "VOLTALITY",
+                "symbol_hint": "US30",
+                "outcome":     None,
+                "net_pips":    None,
+                "ts":          ts,
+                "closed_at":   ts,
+                "tp_hit":      0,
+                "sl_hit":      0,
+                "duration_min": None,
+                "direction":   direction,
+                "entry":       entry,
+                "sl":          sl,
+                "score":       score,
+                "sort_key":    ts or "",
+            })
+    except Exception:
+        pass
+
+    # Sort newest-first by sort_key (string-comparable ISO timestamps)
+    feed.sort(key=lambda x: x.get("sort_key") or "", reverse=True)
+
+    # Apply safety cap (keep newest)
+    if len(feed) > limit:
+        feed = feed[:limit]
+
+    # Strip sort_key from output (internal only)
+    for f in feed:
+        f.pop("sort_key", None)
+
     return feed
 
 
@@ -359,11 +544,11 @@ def build_telegram_health(cur):
     health = []
     # Map engine → signal_id prefix list (same as prefix_map in fetch_engine_stats)
     prefix_map = {
-        "NITRO":     ["VST_", "XAU", "GOLD"],
+        "NITRO":     ["VST_"],
         "DRAGON":    ["GBPJPY"],
-        "TITAN":     ["EURUSD", "EUR_"],
-        "CIPHER":    ["CIPH_", "BTC"],
-        "PHANTOM":   ["PHNTM", "SOL"],
+        "TITAN":     ["EURUSD"],
+        "CIPHER":    ["CIPH_", "BTCUSD_"],
+        "PHANTOM":   ["PHNTM_", "SOLUSD_"],
         "NEXUS":     ["NAS", "NDX", "NEXUS"],
         "VOLTALITY": ["VS_"],
         "FLUENCE":   ["US30"],
@@ -507,8 +692,15 @@ def main():
         except Exception:
             continue
 
-    # Feed of recent closed trades
-    feed = build_feed(cur, limit=50)
+    # Feed of complete trade ledger (all closed + all open, no cutoff)
+    feed = build_feed(cur, limit=1000)
+
+    # Feed totals — for tradelog header display
+    feed_closed = [f for f in feed if f.get("status") == "closed"]
+    feed_open   = [f for f in feed if f.get("status") == "open"]
+    feed_dates = [f["ts"] for f in feed if f.get("ts")]
+    feed_first_ts = min(feed_dates) if feed_dates else None
+    feed_last_ts  = max(feed_dates) if feed_dates else None
 
     # Open trades
     open_trades = build_open_trades(cur)
@@ -553,6 +745,13 @@ def main():
         "engines": engines,
         "daily_pnl": daily,
         "feed": feed,
+        "feed_totals": {
+            "total":       len(feed),
+            "closed":      len(feed_closed),
+            "open":        len(feed_open),
+            "first_ts":    feed_first_ts,
+            "last_ts":     feed_last_ts,
+        },
         "open_trades": open_trades,
         "health": health,
         "telegram_health": telegram_health,
