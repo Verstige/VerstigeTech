@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-28T00:31:57.861152+00:00",
+  "generated_at": "2026-06-28T00:37:57.923083+00:00",
   "totals": {
     "engines": 9,
-    "total_signals": 625,
-    "total_open": 55,
+    "total_signals": 626,
+    "total_open": 56,
     "total_closed": 48,
     "total_wins": 27,
     "total_losses": 21,
@@ -169,8 +169,8 @@
     {
       "name": "CIPHER",
       "symbol": "BTCUSD",
-      "total_signals": 12,
-      "open_trades": 11,
+      "total_signals": 13,
+      "open_trades": 12,
       "closed_trades": 1,
       "wins": 1,
       "losses": 0,
@@ -180,10 +180,17 @@
       "best_trade": 709.0,
       "worst_trade": 709.0,
       "net_dollars": 20.005643340858118,
-      "last_signal_ts": "2026-06-28T00:01:04.980976+00:00",
+      "last_signal_ts": "2026-06-28T00:35:38.782756+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "CIPH_1782606938782",
+          "direction": "sell",
+          "entry": 60053.3,
+          "sl": 60132.9,
+          "opened_at": "2026-06-28T00:35:49.480346+00:00"
+        },
         {
           "trade_id": "CIPH_1782604864980",
           "direction": "sell",
@@ -211,13 +218,6 @@
           "entry": 59256.7,
           "sl": 58983.2,
           "opened_at": "2026-06-26T01:40:25.687780+00:00"
-        },
-        {
-          "trade_id": "CIPH_1782432013623",
-          "direction": "sell",
-          "entry": 59718.3,
-          "sl": 59459.6,
-          "opened_at": "2026-06-26T00:00:14.343980+00:00"
         }
       ],
       "last_close": {
@@ -433,6 +433,23 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "CIPH_1782606938782",
+      "status": "open",
+      "engine_hint": "CIPHER",
+      "symbol_hint": "BTCUSD",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-28T00:35:49.480346+00:00",
+      "closed_at": "2026-06-28T00:35:49.480346+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "sell",
+      "entry": 60053.3,
+      "sl": 60132.9,
+      "score": 4
+    },
     {
       "signal_id": "CIPH_1782604864980",
       "status": "open",
@@ -2597,13 +2614,33 @@
     }
   ],
   "feed_totals": {
-    "total": 156,
+    "total": 157,
     "closed": 98,
-    "open": 58,
+    "open": 59,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-28T00:01:05.733996+00:00"
+    "last_ts": "2026-06-28T00:35:49.480346+00:00"
   },
   "open_trades": [
+    {
+      "engine": "CIPHER",
+      "trade_id": "CIPH_1782606938782",
+      "direction": "sell",
+      "entry": 60053.3,
+      "sl": 60132.9,
+      "tp1": 59973.7,
+      "tp2": 59933.9,
+      "tp3": 59894.1,
+      "tp4": 59814.5,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-28T00:35:49.480346+00:00",
+      "score": 4,
+      "strategy": "cipher",
+      "color": "#f97316",
+      "symbol": "BTCUSD"
+    },
     {
       "engine": "CIPHER",
       "trade_id": "CIPH_1782604864980",
@@ -3747,9 +3784,9 @@
       "symbol": "BTCUSD",
       "color": "#f97316",
       "label": "BTC 4H SMC",
-      "last_signal_ts": "2026-06-28T00:01:04.980976+00:00",
-      "total_signals": 12,
-      "open_trades": 11
+      "last_signal_ts": "2026-06-28T00:35:38.782756+00:00",
+      "total_signals": 13,
+      "open_trades": 12
     },
     {
       "name": "PHANTOM",
