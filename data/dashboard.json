@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T00:07:55.617245+00:00",
+  "generated_at": "2026-06-28T00:13:55.843767+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 625,
@@ -3848,11 +3848,11 @@
       "channel_name": "Crypto OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-27T00:33:54.196713+00:00",
-      "total_updates": 15,
-      "successful_replies": 15,
+      "last_trade_update": "2026-06-28T00:09:44.913727+00:00",
+      "total_updates": 16,
+      "successful_replies": 16,
       "success_rate": 100.0,
-      "last_activity": "2026-06-27T00:33:54.196713+00:00"
+      "last_activity": "2026-06-28T00:09:44.913727+00:00"
     },
     {
       "engine": "PHANTOM",
