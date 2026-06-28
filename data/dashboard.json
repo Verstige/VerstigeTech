@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-28T22:31:51.430724+00:00",
+  "generated_at": "2026-06-28T22:37:52.310753+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 627,
@@ -253,7 +253,7 @@
           "trade_id": "PHNTM_1782685413225",
           "direction": "sell",
           "entry": 70.9,
-          "sl": 71.3,
+          "sl": 70.9,
           "opened_at": "2026-06-28T22:23:33.887944+00:00"
         },
         {
@@ -447,7 +447,7 @@
       "duration_min": null,
       "direction": "sell",
       "entry": 70.9,
-      "sl": 71.3,
+      "sl": 70.9,
       "score": 40
     },
     {
@@ -2643,12 +2643,12 @@
       "trade_id": "PHNTM_1782685413225",
       "direction": "sell",
       "entry": 70.9,
-      "sl": 71.3,
+      "sl": 70.9,
       "tp1": 70.5,
       "tp2": 70.2,
       "tp3": 70.0,
       "tp4": 70.0,
-      "tp1_hit": 0,
+      "tp1_hit": 1,
       "tp2_hit": 0,
       "tp3_hit": 0,
       "tp4_hit": 0,
@@ -3935,11 +3935,11 @@
       "channel_name": "Crypto OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-26T06:22:31.040469+00:00",
-      "total_updates": 6,
-      "successful_replies": 6,
+      "last_trade_update": "2026-06-28T22:34:45.704619+00:00",
+      "total_updates": 7,
+      "successful_replies": 7,
       "success_rate": 100.0,
-      "last_activity": "2026-06-26T06:22:31.040469+00:00"
+      "last_activity": "2026-06-28T22:34:45.704619+00:00"
     },
     {
       "engine": "NEXUS",
