@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-29T13:32:02.748430+00:00",
+  "generated_at": "2026-06-29T13:38:03.098063+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 634,
-    "total_open": 63,
+    "total_open": 64,
     "total_closed": 48,
     "total_wins": 27,
     "total_losses": 21,
@@ -342,7 +342,7 @@
       "name": "FLUENCE",
       "symbol": "US30",
       "total_signals": 0,
-      "open_trades": 27,
+      "open_trades": 28,
       "closed_trades": 9,
       "wins": 2,
       "losses": 7,
@@ -356,6 +356,13 @@
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "US30_1782740009",
+          "direction": "sell",
+          "entry": 52235.0,
+          "sl": 52435.0,
+          "opened_at": "2026-06-29T13:33:30.206444+00:00"
+        },
         {
           "trade_id": "US30_1782490181",
           "direction": "buy",
@@ -383,13 +390,6 @@
           "entry": 52535.0,
           "sl": 52335.0,
           "opened_at": "2026-06-25T15:07:23.395501+00:00"
-        },
-        {
-          "trade_id": "US30_1782399663",
-          "direction": "buy",
-          "entry": 52645.0,
-          "sl": 52445.0,
-          "opened_at": "2026-06-25T15:01:04.098850+00:00"
         }
       ],
       "last_close": {
@@ -433,6 +433,23 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "US30_1782740009",
+      "status": "open",
+      "engine_hint": "FLUENCE",
+      "symbol_hint": "US30",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-29T13:33:30.206444+00:00",
+      "closed_at": "2026-06-29T13:33:30.206444+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "sell",
+      "entry": 52235.0,
+      "sl": 52435.0,
+      "score": 40
+    },
     {
       "signal_id": "GBPJPY_1782734439",
       "status": "open",
@@ -2750,13 +2767,33 @@
     }
   ],
   "feed_totals": {
-    "total": 165,
+    "total": 166,
     "closed": 98,
-    "open": 67,
+    "open": 68,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-29T12:00:39.648939+00:00"
+    "last_ts": "2026-06-29T13:33:30.206444+00:00"
   },
   "open_trades": [
+    {
+      "engine": "FLUENCE",
+      "trade_id": "US30_1782740009",
+      "direction": "sell",
+      "entry": 52235.0,
+      "sl": 52435.0,
+      "tp1": 52135.0,
+      "tp2": 51985.0,
+      "tp3": 51735.0,
+      "tp4": 50735.0,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-29T13:33:30.206444+00:00",
+      "score": 40,
+      "strategy": "fluence",
+      "color": "#ec4899",
+      "symbol": "US30"
+    },
     {
       "engine": "DRAGON",
       "trade_id": "GBPJPY_1782734439",
@@ -4098,7 +4135,7 @@
       "label": "US30 SMC",
       "last_signal_ts": null,
       "total_signals": 0,
-      "open_trades": 27
+      "open_trades": 28
     }
   ],
   "telegram_health": [
