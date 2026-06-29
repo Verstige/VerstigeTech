@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-29T11:55:54.901893+00:00",
+  "generated_at": "2026-06-29T12:01:55.615642+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 633,
-    "total_open": 62,
+    "total_open": 63,
     "total_closed": 48,
     "total_wins": 27,
     "total_losses": 21,
@@ -68,7 +68,7 @@
       "name": "DRAGON",
       "symbol": "GBPJPY",
       "total_signals": 0,
-      "open_trades": 8,
+      "open_trades": 9,
       "closed_trades": 8,
       "wins": 7,
       "losses": 1,
@@ -82,6 +82,13 @@
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "GBPJPY_1782734439",
+          "direction": "buy",
+          "entry": 214.1405,
+          "sl": 213.6405,
+          "opened_at": "2026-06-29T12:00:39.648939+00:00"
+        },
         {
           "trade_id": "GBPJPY_1782394464",
           "direction": "buy",
@@ -109,13 +116,6 @@
           "entry": 214.1145,
           "sl": 214.31449999999998,
           "opened_at": "2026-06-22T12:00:18.872502+00:00"
-        },
-        {
-          "trade_id": "GBPJPY_1781870431",
-          "direction": "buy",
-          "entry": 213.343,
-          "sl": 213.343,
-          "opened_at": "2026-06-19T12:00:32.396385+00:00"
         }
       ],
       "last_close": {
@@ -433,6 +433,23 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "GBPJPY_1782734439",
+      "status": "open",
+      "engine_hint": "DRAGON",
+      "symbol_hint": "GBPJPY",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-29T12:00:39.648939+00:00",
+      "closed_at": "2026-06-29T12:00:39.648939+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "buy",
+      "entry": 214.1405,
+      "sl": 213.6405,
+      "score": 55
+    },
     {
       "signal_id": "VST_1782733861001",
       "status": "open",
@@ -2733,13 +2750,33 @@
     }
   ],
   "feed_totals": {
-    "total": 164,
+    "total": 165,
     "closed": 98,
-    "open": 66,
+    "open": 67,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-29T11:51:12.685452+00:00"
+    "last_ts": "2026-06-29T12:00:39.648939+00:00"
   },
   "open_trades": [
+    {
+      "engine": "DRAGON",
+      "trade_id": "GBPJPY_1782734439",
+      "direction": "buy",
+      "entry": 214.1405,
+      "sl": 213.6405,
+      "tp1": 214.3405,
+      "tp2": 214.6405,
+      "tp3": 215.1405,
+      "tp4": 216.6405,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-29T12:00:39.648939+00:00",
+      "score": 55,
+      "strategy": "dragon",
+      "color": "#ef4444",
+      "symbol": "GBPJPY"
+    },
     {
       "engine": "CIPHER",
       "trade_id": "CIPH_1782694528577",
@@ -4007,7 +4044,7 @@
       "label": "GBP/JPY Reversal",
       "last_signal_ts": null,
       "total_signals": 0,
-      "open_trades": 8
+      "open_trades": 9
     },
     {
       "name": "TITAN",
