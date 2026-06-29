@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T12:38:00.392587+00:00",
+  "generated_at": "2026-06-29T12:44:00.933332+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 633,
@@ -4276,8 +4276,7 @@
     "VOLTALITY": {
       "running": true,
       "pids": [
-        "11314",
-        "11317"
+        "20609"
       ],
       "runner": "voltality_runner.py"
     },
