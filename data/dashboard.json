@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-29T13:26:01.646568+00:00",
+  "generated_at": "2026-06-29T13:32:02.748430+00:00",
   "totals": {
     "engines": 9,
-    "total_signals": 633,
+    "total_signals": 634,
     "total_open": 63,
     "total_closed": 48,
     "total_wins": 27,
@@ -291,7 +291,7 @@
     {
       "name": "NEXUS",
       "symbol": "NAS100",
-      "total_signals": 6,
+      "total_signals": 7,
       "open_trades": 0,
       "closed_trades": 0,
       "wins": 0,
@@ -302,7 +302,7 @@
       "best_trade": 0.0,
       "worst_trade": 0.0,
       "net_dollars": 0.0,
-      "last_signal_ts": "2026-06-26T14:39:53.923163+00:00",
+      "last_signal_ts": "2026-06-29T13:31:18.013047+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [],
@@ -4078,8 +4078,8 @@
       "symbol": "NAS100",
       "color": "#00d4ff",
       "label": "NAS100 Prime Zone",
-      "last_signal_ts": "2026-06-26T14:39:53.923163+00:00",
-      "total_signals": 6,
+      "last_signal_ts": "2026-06-29T13:31:18.013047+00:00",
+      "total_signals": 7,
       "open_trades": 0
     },
     {
@@ -4185,13 +4185,13 @@
       "color": "#00d4ff",
       "chat_id": "-1003957008363",
       "channel_name": "NAS100 OS",
-      "last_signal_delivery": "2026-06-26T14:39:53.923163+00:00",
-      "last_signal_id": "VS_1782484793",
+      "last_signal_delivery": "2026-06-29T13:31:18.013047+00:00",
+      "last_signal_id": "VS_1782739878",
       "last_trade_update": null,
       "total_updates": 0,
       "successful_replies": 0,
       "success_rate": null,
-      "last_activity": "2026-06-26T14:39:53.923163+00:00"
+      "last_activity": "2026-06-29T13:31:18.013047+00:00"
     },
     {
       "engine": "VOLTALITY",
