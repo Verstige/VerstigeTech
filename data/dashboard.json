@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-29T15:07:12.411716+00:00",
+  "generated_at": "2026-06-29T15:13:12.558216+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 635,
-    "total_open": 65,
+    "total_open": 66,
     "total_closed": 51,
     "total_wins": 28,
     "total_losses": 23,
@@ -342,7 +342,7 @@
       "name": "FLUENCE",
       "symbol": "US30",
       "total_signals": 0,
-      "open_trades": 29,
+      "open_trades": 30,
       "closed_trades": 11,
       "wins": 3,
       "losses": 8,
@@ -356,6 +356,13 @@
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "US30_1782745766",
+          "direction": "buy",
+          "entry": 52235.0,
+          "sl": 52035.0,
+          "opened_at": "2026-06-29T15:09:26.820315+00:00"
+        },
         {
           "trade_id": "US30_1782743617",
           "direction": "buy",
@@ -383,13 +390,6 @@
           "entry": 52270.0,
           "sl": 52070.0,
           "opened_at": "2026-06-26T15:43:39.571914+00:00"
-        },
-        {
-          "trade_id": "US30_1782480608",
-          "direction": "sell",
-          "entry": 51905.0,
-          "sl": 52105.0,
-          "opened_at": "2026-06-26T13:30:09.196174+00:00"
         }
       ],
       "last_close": {
@@ -440,6 +440,23 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "US30_1782745766",
+      "status": "open",
+      "engine_hint": "FLUENCE",
+      "symbol_hint": "US30",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-29T15:09:26.820315+00:00",
+      "closed_at": "2026-06-29T15:09:26.820315+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "buy",
+      "entry": 52235.0,
+      "sl": 52035.0,
+      "score": 65
+    },
     {
       "signal_id": "US30_1782743617",
       "status": "closed",
@@ -2827,13 +2844,33 @@
     }
   ],
   "feed_totals": {
-    "total": 170,
+    "total": 171,
     "closed": 101,
-    "open": 69,
+    "open": 70,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-29T15:02:13.511826+00:00"
+    "last_ts": "2026-06-29T15:09:26.820315+00:00"
   },
   "open_trades": [
+    {
+      "engine": "FLUENCE",
+      "trade_id": "US30_1782745766",
+      "direction": "buy",
+      "entry": 52235.0,
+      "sl": 52035.0,
+      "tp1": 52335.0,
+      "tp2": 52485.0,
+      "tp3": 52735.0,
+      "tp4": 53735.0,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-29T15:09:26.820315+00:00",
+      "score": 65,
+      "strategy": "fluence",
+      "color": "#ec4899",
+      "symbol": "US30"
+    },
     {
       "engine": "FLUENCE",
       "trade_id": "US30_1782743617",
@@ -4215,7 +4252,7 @@
       "label": "US30 SMC",
       "last_signal_ts": null,
       "total_signals": 0,
-      "open_trades": 29
+      "open_trades": 30
     }
   ],
   "telegram_health": [
