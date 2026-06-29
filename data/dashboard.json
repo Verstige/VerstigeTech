@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-29T00:38:01.406738+00:00",
+  "generated_at": "2026-06-29T00:44:02.221608+00:00",
   "totals": {
     "engines": 9,
-    "total_signals": 630,
-    "total_open": 60,
+    "total_signals": 631,
+    "total_open": 61,
     "total_closed": 48,
     "total_wins": 27,
     "total_losses": 21,
@@ -234,8 +234,8 @@
     {
       "name": "PHANTOM",
       "symbol": "SOLUSD",
-      "total_signals": 28,
-      "open_trades": 11,
+      "total_signals": 29,
+      "open_trades": 12,
       "closed_trades": 0,
       "wins": 0,
       "losses": 0,
@@ -245,10 +245,17 @@
       "best_trade": 0.0,
       "worst_trade": 0.0,
       "net_dollars": 0.0,
-      "last_signal_ts": "2026-06-29T00:00:40.950698+00:00",
+      "last_signal_ts": "2026-06-29T00:42:21.897565+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "PHNTM_1782693741897",
+          "direction": "sell",
+          "entry": 71.0,
+          "sl": 71.5,
+          "opened_at": "2026-06-29T00:42:22.196963+00:00"
+        },
         {
           "trade_id": "PHNTM_1782691240950",
           "direction": "sell",
@@ -276,13 +283,6 @@
           "entry": 67.2,
           "sl": 68.0,
           "opened_at": "2026-06-26T03:39:27.151021+00:00"
-        },
-        {
-          "trade_id": "PHNTM_1782440038615",
-          "direction": "sell",
-          "entry": 66.0,
-          "sl": 67.2,
-          "opened_at": "2026-06-26T02:13:59.301099+00:00"
         }
       ],
       "strategy_label": "SOL Weighted Score",
@@ -433,6 +433,23 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "PHNTM_1782693741897",
+      "status": "open",
+      "engine_hint": "PHANTOM",
+      "symbol_hint": "SOLUSD",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-29T00:42:22.196963+00:00",
+      "closed_at": "2026-06-29T00:42:22.196963+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "sell",
+      "entry": 71.0,
+      "sl": 71.5,
+      "score": 40
+    },
     {
       "signal_id": "PHNTM_1782691240950",
       "status": "open",
@@ -2682,13 +2699,33 @@
     }
   ],
   "feed_totals": {
-    "total": 161,
+    "total": 162,
     "closed": 98,
-    "open": 63,
+    "open": 64,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-29T00:00:41.529029+00:00"
+    "last_ts": "2026-06-29T00:42:22.196963+00:00"
   },
   "open_trades": [
+    {
+      "engine": "PHANTOM",
+      "trade_id": "PHNTM_1782693741897",
+      "direction": "sell",
+      "entry": 71.0,
+      "sl": 71.5,
+      "tp1": 70.5,
+      "tp2": 70.3,
+      "tp3": 70.1,
+      "tp4": 70.1,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-29T00:42:22.196963+00:00",
+      "score": 40,
+      "strategy": "cipher",
+      "color": "#a855f7",
+      "symbol": "SOLUSD"
+    },
     {
       "engine": "PHANTOM",
       "trade_id": "PHNTM_1782691240950",
@@ -3941,9 +3978,9 @@
       "symbol": "SOLUSD",
       "color": "#a855f7",
       "label": "SOL Weighted Score",
-      "last_signal_ts": "2026-06-29T00:00:40.950698+00:00",
-      "total_signals": 28,
-      "open_trades": 11
+      "last_signal_ts": "2026-06-29T00:42:21.897565+00:00",
+      "total_signals": 29,
+      "open_trades": 12
     },
     {
       "name": "NEXUS",
@@ -4046,11 +4083,11 @@
       "channel_name": "Crypto OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-29T00:31:42.009894+00:00",
-      "total_updates": 11,
-      "successful_replies": 11,
+      "last_trade_update": "2026-06-29T00:42:21.841209+00:00",
+      "total_updates": 12,
+      "successful_replies": 12,
       "success_rate": 100.0,
-      "last_activity": "2026-06-29T00:31:42.009894+00:00"
+      "last_activity": "2026-06-29T00:42:21.841209+00:00"
     },
     {
       "engine": "NEXUS",
