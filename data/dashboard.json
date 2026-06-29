@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-29T14:31:10.128607+00:00",
+  "generated_at": "2026-06-29T14:37:10.193250+00:00",
   "totals": {
     "engines": 9,
-    "total_signals": 634,
-    "total_open": 64,
+    "total_signals": 635,
+    "total_open": 65,
     "total_closed": 50,
     "total_wins": 28,
     "total_losses": 22,
@@ -291,7 +291,7 @@
     {
       "name": "NEXUS",
       "symbol": "NAS100",
-      "total_signals": 7,
+      "total_signals": 8,
       "open_trades": 0,
       "closed_trades": 0,
       "wins": 0,
@@ -302,7 +302,7 @@
       "best_trade": 0.0,
       "worst_trade": 0.0,
       "net_dollars": 0.0,
-      "last_signal_ts": "2026-06-29T13:31:18.013047+00:00",
+      "last_signal_ts": "2026-06-29T14:31:47.422579+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [],
@@ -342,7 +342,7 @@
       "name": "FLUENCE",
       "symbol": "US30",
       "total_signals": 0,
-      "open_trades": 28,
+      "open_trades": 29,
       "closed_trades": 10,
       "wins": 3,
       "losses": 7,
@@ -356,6 +356,13 @@
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "US30_1782743617",
+          "direction": "buy",
+          "entry": 52355.0,
+          "sl": 52155.0,
+          "opened_at": "2026-06-29T14:33:37.988369+00:00"
+        },
         {
           "trade_id": "US30_1782740009",
           "direction": "sell",
@@ -383,13 +390,6 @@
           "entry": 51905.0,
           "sl": 52105.0,
           "opened_at": "2026-06-26T13:30:09.196174+00:00"
-        },
-        {
-          "trade_id": "US30_1782400042",
-          "direction": "buy",
-          "entry": 52535.0,
-          "sl": 52335.0,
-          "opened_at": "2026-06-25T15:07:23.395501+00:00"
         }
       ],
       "last_close": {
@@ -440,6 +440,23 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "US30_1782743617",
+      "status": "open",
+      "engine_hint": "FLUENCE",
+      "symbol_hint": "US30",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-29T14:33:37.988369+00:00",
+      "closed_at": "2026-06-29T14:33:37.988369+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "buy",
+      "entry": 52355.0,
+      "sl": 52155.0,
+      "score": 60
+    },
     {
       "signal_id": "US30_1782740009",
       "status": "closed",
@@ -2798,13 +2815,33 @@
     }
   ],
   "feed_totals": {
-    "total": 168,
+    "total": 169,
     "closed": 100,
-    "open": 68,
+    "open": 69,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-29T14:25:52.121040+00:00"
+    "last_ts": "2026-06-29T14:33:37.988369+00:00"
   },
   "open_trades": [
+    {
+      "engine": "FLUENCE",
+      "trade_id": "US30_1782743617",
+      "direction": "buy",
+      "entry": 52355.0,
+      "sl": 52155.0,
+      "tp1": 52455.0,
+      "tp2": 52605.0,
+      "tp3": 52855.0,
+      "tp4": 53855.0,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-29T14:33:37.988369+00:00",
+      "score": 60,
+      "strategy": "fluence",
+      "color": "#ec4899",
+      "symbol": "US30"
+    },
     {
       "engine": "FLUENCE",
       "trade_id": "US30_1782740009",
@@ -4146,8 +4183,8 @@
       "symbol": "NAS100",
       "color": "#00d4ff",
       "label": "NAS100 Prime Zone",
-      "last_signal_ts": "2026-06-29T13:31:18.013047+00:00",
-      "total_signals": 7,
+      "last_signal_ts": "2026-06-29T14:31:47.422579+00:00",
+      "total_signals": 8,
       "open_trades": 0
     },
     {
@@ -4166,7 +4203,7 @@
       "label": "US30 SMC",
       "last_signal_ts": null,
       "total_signals": 0,
-      "open_trades": 28
+      "open_trades": 29
     }
   ],
   "telegram_health": [
@@ -4253,13 +4290,13 @@
       "color": "#00d4ff",
       "chat_id": "-1003957008363",
       "channel_name": "NAS100 OS",
-      "last_signal_delivery": "2026-06-29T13:31:18.013047+00:00",
-      "last_signal_id": "VS_1782739878",
+      "last_signal_delivery": "2026-06-29T14:31:47.422579+00:00",
+      "last_signal_id": "VS_1782743507",
       "last_trade_update": null,
       "total_updates": 0,
       "successful_replies": 0,
       "success_rate": null,
-      "last_activity": "2026-06-29T13:31:18.013047+00:00"
+      "last_activity": "2026-06-29T14:31:47.422579+00:00"
     },
     {
       "engine": "VOLTALITY",
