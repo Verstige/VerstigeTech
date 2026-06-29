@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T13:20:01.139587+00:00",
+  "generated_at": "2026-06-29T13:26:01.646568+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 633,
@@ -86,7 +86,7 @@
           "trade_id": "GBPJPY_1782734439",
           "direction": "buy",
           "entry": 214.1405,
-          "sl": 213.6405,
+          "sl": 214.1405,
           "opened_at": "2026-06-29T12:00:39.648939+00:00"
         },
         {
@@ -447,7 +447,7 @@
       "duration_min": null,
       "direction": "buy",
       "entry": 214.1405,
-      "sl": 213.6405,
+      "sl": 214.1405,
       "score": 55
     },
     {
@@ -2762,12 +2762,12 @@
       "trade_id": "GBPJPY_1782734439",
       "direction": "buy",
       "entry": 214.1405,
-      "sl": 213.6405,
+      "sl": 214.1405,
       "tp1": 214.3405,
       "tp2": 214.6405,
       "tp3": 215.1405,
       "tp4": 216.6405,
-      "tp1_hit": 0,
+      "tp1_hit": 1,
       "tp2_hit": 0,
       "tp3_hit": 0,
       "tp4_hit": 0,
@@ -4135,11 +4135,11 @@
       "channel_name": "Forex OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-25T16:01:45.694186+00:00",
-      "total_updates": 1,
-      "successful_replies": 1,
+      "last_trade_update": "2026-06-29T13:24:17.702334+00:00",
+      "total_updates": 2,
+      "successful_replies": 2,
       "success_rate": 100.0,
-      "last_activity": "2026-06-25T16:01:45.694186+00:00"
+      "last_activity": "2026-06-29T13:24:17.702334+00:00"
     },
     {
       "engine": "TITAN",
