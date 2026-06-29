@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-06-29T15:25:12.996879+00:00",
+  "generated_at": "2026-06-29T15:31:13.141245+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 635,
     "total_open": 66,
-    "total_closed": 51,
-    "total_wins": 28,
+    "total_closed": 52,
+    "total_wins": 29,
     "total_losses": 23,
-    "win_rate": 54.9,
-    "net_pips": 2583.5,
-    "net_dollars": -59.67,
+    "win_rate": 55.8,
+    "net_pips": 2840.0,
+    "net_dollars": -8.38,
     "account_size": 1000.0,
     "risk_per_trade": 10.0
   },
@@ -314,26 +314,26 @@
       "symbol": "US30",
       "total_signals": 10,
       "open_trades": 0,
-      "closed_trades": 18,
-      "wins": 9,
+      "closed_trades": 19,
+      "wins": 10,
       "losses": 9,
-      "net_pips": 1230.0,
-      "win_rate": 50.0,
-      "avg_pips": 68.33333333333333,
+      "net_pips": 1486.431640625,
+      "win_rate": 52.63157894736842,
+      "avg_pips": 78.23324424342105,
       "best_trade": 500.0,
       "worst_trade": -200.0,
-      "net_dollars": -30.0,
+      "net_dollars": 21.286328125000004,
       "last_signal_ts": "2026-06-08T13:32:41.964505+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [],
       "last_close": {
-        "signal_id": "VS_1782739878",
-        "outcome": "loss",
-        "pips": -100.0,
-        "closed_at": "2026-06-29T14:15:43.812516+00:00",
-        "tp_hit": 0,
-        "sl_hit": 1
+        "signal_id": "VS_1782743507",
+        "outcome": "win",
+        "pips": 256.431640625,
+        "closed_at": "2026-06-29T15:30:23.857007+00:00",
+        "tp_hit": 3,
+        "sl_hit": 0
       },
       "strategy_label": "US30 Prime Zone",
       "color": "#7c3aed"
@@ -433,13 +433,25 @@
     },
     "2026-06-29": {
       "NEXUS": {
-        "pips": -100.0,
-        "trades": 1,
+        "pips": 156.431640625,
+        "trades": 2,
         "color": "#00d4ff"
       }
     }
   },
   "feed": [
+    {
+      "signal_id": "VS_1782743507",
+      "status": "closed",
+      "outcome": "win",
+      "net_pips": 256.431640625,
+      "ts": "2026-06-29T15:30:23.857007+00:00",
+      "closed_at": "2026-06-29T15:30:23.857007+00:00",
+      "tp_hit": 3,
+      "sl_hit": 0,
+      "duration_min": 1.3e-06,
+      "exit_price": 29506.431640625
+    },
     {
       "signal_id": "US30_1782745766",
       "status": "open",
@@ -2844,11 +2856,11 @@
     }
   ],
   "feed_totals": {
-    "total": 171,
-    "closed": 101,
+    "total": 172,
+    "closed": 102,
     "open": 70,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-29T15:09:26.820315+00:00"
+    "last_ts": "2026-06-29T15:30:23.857007+00:00"
   },
   "open_trades": [
     {
@@ -4354,11 +4366,11 @@
       "channel_name": "US30 OS",
       "last_signal_delivery": "2026-06-08T13:32:41.964505+00:00",
       "last_signal_id": "VS_1780925561",
-      "last_trade_update": "2026-06-29T14:54:15.572256+00:00",
-      "total_updates": 80,
-      "successful_replies": 24,
-      "success_rate": 30.0,
-      "last_activity": "2026-06-29T14:54:15.572256+00:00"
+      "last_trade_update": "2026-06-29T15:30:23.834724+00:00",
+      "total_updates": 81,
+      "successful_replies": 25,
+      "success_rate": 30.9,
+      "last_activity": "2026-06-29T15:30:23.834724+00:00"
     },
     {
       "engine": "FLUENCE",
@@ -5050,6 +5062,12 @@
         "cum_pips": 6636.34,
         "trade_pips": -200.0,
         "outcome": "loss"
+      },
+      {
+        "ts": "2026-06-29T15:30:23.857007+00:00",
+        "cum_pips": 6892.77,
+        "trade_pips": 256.43,
+        "outcome": "win"
       }
     ],
     "drawdown_series": [
@@ -5557,24 +5575,29 @@
         "ts": "2026-06-29T15:02:13.511826+00:00",
         "drawdown": 1700.0,
         "cum_pips": 6636.34
+      },
+      {
+        "ts": "2026-06-29T15:30:23.857007+00:00",
+        "drawdown": 1443.57,
+        "cum_pips": 6892.77
       }
     ],
-    "sharpe": 3.1,
-    "sortino": 4.77,
-    "sqn": 3.1,
+    "sharpe": 3.21,
+    "sortino": 4.93,
+    "sqn": 3.21,
     "max_dd": 1700.0,
     "max_dd_idx": 98,
-    "current_dd": 1700.0,
+    "current_dd": 1443.6,
     "peak_idx": 82,
     "max_consec_wins": 9,
     "max_consec_losses": 6,
-    "profit_factor": 2.69,
-    "win_loss_ratio": 1.97,
-    "avg_win": 234.7,
+    "profit_factor": 2.76,
+    "win_loss_ratio": 1.98,
+    "avg_win": 235.2,
     "avg_loss": 119.0,
-    "expectancy": 38.61,
-    "kelly_pct": 16.4,
-    "recovery_factor": 3.9,
-    "total_trades": 101
+    "expectancy": 40.74,
+    "kelly_pct": 17.3,
+    "recovery_factor": 4.05,
+    "total_trades": 102
   }
 }
