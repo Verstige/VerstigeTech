@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T14:49:10.394357+00:00",
+  "generated_at": "2026-06-29T14:55:10.942386+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 635,
@@ -4305,11 +4305,11 @@
       "channel_name": "US30 OS",
       "last_signal_delivery": "2026-06-08T13:32:41.964505+00:00",
       "last_signal_id": "VS_1780925561",
-      "last_trade_update": "2026-06-29T14:15:43.807074+00:00",
-      "total_updates": 78,
-      "successful_replies": 22,
-      "success_rate": 28.2,
-      "last_activity": "2026-06-29T14:15:43.807074+00:00"
+      "last_trade_update": "2026-06-29T14:54:15.572256+00:00",
+      "total_updates": 80,
+      "successful_replies": 24,
+      "success_rate": 30.0,
+      "last_activity": "2026-06-29T14:54:15.572256+00:00"
     },
     {
       "engine": "FLUENCE",
