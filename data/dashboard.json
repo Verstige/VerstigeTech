@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-06-29T14:25:09.396460+00:00",
+  "generated_at": "2026-06-29T14:31:10.128607+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 634,
     "total_open": 64,
-    "total_closed": 49,
-    "total_wins": 27,
+    "total_closed": 50,
+    "total_wins": 28,
     "total_losses": 22,
-    "win_rate": 55.1,
-    "net_pips": 2583.5,
-    "net_dollars": -69.67,
+    "win_rate": 56.0,
+    "net_pips": 2783.5,
+    "net_dollars": -49.67,
     "account_size": 1000.0,
     "risk_per_trade": 10.0
   },
@@ -343,15 +343,15 @@
       "symbol": "US30",
       "total_signals": 0,
       "open_trades": 28,
-      "closed_trades": 9,
-      "wins": 2,
+      "closed_trades": 10,
+      "wins": 3,
       "losses": 7,
-      "net_pips": -1100.0,
-      "win_rate": 22.22222222222222,
-      "avg_pips": -122.22222222222223,
+      "net_pips": -900.0,
+      "win_rate": 30.0,
+      "avg_pips": -90.0,
       "best_trade": 200.0,
       "worst_trade": -200.0,
-      "net_dollars": -50.0,
+      "net_dollars": -30.0,
       "last_signal_ts": null,
       "last_signal_dir": null,
       "last_signal_entry": null,
@@ -393,11 +393,11 @@
         }
       ],
       "last_close": {
-        "signal_id": "US30_1782490181",
-        "outcome": "loss",
-        "pips": -200.0,
-        "closed_at": "2026-06-26T16:20:35.267504+00:00",
-        "tp_hit": 0,
+        "signal_id": "US30_1782740009",
+        "outcome": "partial",
+        "pips": 200.0,
+        "closed_at": "2026-06-29T14:25:52.121040+00:00",
+        "tp_hit": 2,
         "sl_hit": 1
       },
       "strategy_label": "US30 SMC",
@@ -440,6 +440,18 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "US30_1782740009",
+      "status": "closed",
+      "outcome": "partial",
+      "net_pips": 200.0,
+      "ts": "2026-06-29T14:25:52.121040+00:00",
+      "closed_at": "2026-06-29T14:25:52.121040+00:00",
+      "tp_hit": 2,
+      "sl_hit": 1,
+      "duration_min": 1.3e-06,
+      "exit_price": 52135.0
+    },
     {
       "signal_id": "VS_1782739878",
       "status": "closed",
@@ -2786,11 +2798,11 @@
     }
   ],
   "feed_totals": {
-    "total": 167,
-    "closed": 99,
+    "total": 168,
+    "closed": 100,
     "open": 68,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-29T14:15:43.812516+00:00"
+    "last_ts": "2026-06-29T14:25:52.121040+00:00"
   },
   "open_trades": [
     {
@@ -4269,11 +4281,11 @@
       "channel_name": "US30 OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-29T14:15:11.637498+00:00",
-      "total_updates": 10,
-      "successful_replies": 10,
+      "last_trade_update": "2026-06-29T14:25:52.115403+00:00",
+      "total_updates": 11,
+      "successful_replies": 11,
       "success_rate": 100.0,
-      "last_activity": "2026-06-29T14:15:11.637498+00:00"
+      "last_activity": "2026-06-29T14:25:52.115403+00:00"
     }
   ],
   "process_health": {
@@ -4940,6 +4952,12 @@
         "cum_pips": 6636.34,
         "trade_pips": -100.0,
         "outcome": "loss"
+      },
+      {
+        "ts": "2026-06-29T14:25:52.121040+00:00",
+        "cum_pips": 6836.34,
+        "trade_pips": 200.0,
+        "outcome": "partial"
       }
     ],
     "drawdown_series": [
@@ -5437,24 +5455,29 @@
         "ts": "2026-06-29T14:15:43.812516+00:00",
         "drawdown": 1700.0,
         "cum_pips": 6636.34
+      },
+      {
+        "ts": "2026-06-29T14:25:52.121040+00:00",
+        "drawdown": 1500.0,
+        "cum_pips": 6836.34
       }
     ],
-    "sharpe": 3.13,
-    "sortino": 4.9,
-    "sqn": 3.13,
+    "sharpe": 3.22,
+    "sortino": 5.02,
+    "sqn": 3.22,
     "max_dd": 1700.0,
     "max_dd_idx": 98,
-    "current_dd": 1700.0,
+    "current_dd": 1500.0,
     "peak_idx": 82,
     "max_consec_wins": 9,
     "max_consec_losses": 6,
-    "profit_factor": 2.78,
+    "profit_factor": 2.83,
     "win_loss_ratio": 2.02,
-    "avg_win": 235.5,
+    "avg_win": 234.7,
     "avg_loss": 116.5,
-    "expectancy": 39.98,
-    "kelly_pct": 17.0,
-    "recovery_factor": 3.9,
-    "total_trades": 99
+    "expectancy": 41.58,
+    "kelly_pct": 17.7,
+    "recovery_factor": 4.02,
+    "total_trades": 100
   }
 }
