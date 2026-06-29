@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T13:56:04.743847+00:00",
+  "generated_at": "2026-06-29T14:02:05.626465+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 634,
@@ -360,7 +360,7 @@
           "trade_id": "US30_1782740009",
           "direction": "sell",
           "entry": 52235.0,
-          "sl": 52435.0,
+          "sl": 52235.0,
           "opened_at": "2026-06-29T13:33:30.206444+00:00"
         },
         {
@@ -447,7 +447,7 @@
       "duration_min": null,
       "direction": "sell",
       "entry": 52235.0,
-      "sl": 52435.0,
+      "sl": 52235.0,
       "score": 40
     },
     {
@@ -2779,12 +2779,12 @@
       "trade_id": "US30_1782740009",
       "direction": "sell",
       "entry": 52235.0,
-      "sl": 52435.0,
+      "sl": 52235.0,
       "tp1": 52135.0,
       "tp2": 51985.0,
       "tp3": 51735.0,
       "tp4": 50735.0,
-      "tp1_hit": 0,
+      "tp1_hit": 1,
       "tp2_hit": 0,
       "tp3_hit": 0,
       "tp4_hit": 0,
@@ -4250,11 +4250,11 @@
       "channel_name": "US30 OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-26T16:20:35.241562+00:00",
-      "total_updates": 8,
-      "successful_replies": 8,
+      "last_trade_update": "2026-06-29T14:00:27.074468+00:00",
+      "total_updates": 9,
+      "successful_replies": 9,
       "success_rate": 100.0,
-      "last_activity": "2026-06-26T16:20:35.241562+00:00"
+      "last_activity": "2026-06-29T14:00:27.074468+00:00"
     }
   ],
   "process_health": {
