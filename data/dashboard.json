@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-29T02:08:06.979021+00:00",
+  "generated_at": "2026-06-29T02:14:07.158524+00:00",
   "totals": {
     "engines": 9,
     "total_signals": 632,
@@ -188,7 +188,7 @@
           "trade_id": "CIPH_1782694528577",
           "direction": "sell",
           "entry": 59480.3,
-          "sl": 59480.3,
+          "sl": 59220.8,
           "opened_at": "2026-06-29T00:55:28.883365+00:00"
         },
         {
@@ -447,7 +447,7 @@
       "duration_min": null,
       "direction": "sell",
       "entry": 59480.3,
-      "sl": 59480.3,
+      "sl": 59220.8,
       "score": 4
     },
     {
@@ -2728,14 +2728,14 @@
       "trade_id": "CIPH_1782694528577",
       "direction": "sell",
       "entry": 59480.3,
-      "sl": 59480.3,
+      "sl": 59220.8,
       "tp1": 59220.8,
       "tp2": 59091.0,
       "tp3": 58961.3,
       "tp4": 58701.8,
       "tp1_hit": 1,
-      "tp2_hit": 0,
-      "tp3_hit": 0,
+      "tp2_hit": 1,
+      "tp3_hit": 1,
       "tp4_hit": 0,
       "opened_at": "2026-06-29T00:55:28.883365+00:00",
       "score": 4,
@@ -4107,11 +4107,11 @@
       "channel_name": "Crypto OS",
       "last_signal_delivery": null,
       "last_signal_id": null,
-      "last_trade_update": "2026-06-29T01:17:52.210266+00:00",
-      "total_updates": 22,
-      "successful_replies": 22,
+      "last_trade_update": "2026-06-29T02:13:26.798767+00:00",
+      "total_updates": 24,
+      "successful_replies": 24,
       "success_rate": 100.0,
-      "last_activity": "2026-06-29T01:17:52.210266+00:00"
+      "last_activity": "2026-06-29T02:13:26.798767+00:00"
     },
     {
       "engine": "PHANTOM",
