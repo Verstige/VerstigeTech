@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-28T23:55:59.148300+00:00",
+  "generated_at": "2026-06-29T00:01:59.175294+00:00",
   "totals": {
     "engines": 9,
-    "total_signals": 628,
-    "total_open": 58,
+    "total_signals": 630,
+    "total_open": 60,
     "total_closed": 48,
     "total_wins": 27,
     "total_losses": 21,
@@ -169,8 +169,8 @@
     {
       "name": "CIPHER",
       "symbol": "BTCUSD",
-      "total_signals": 13,
-      "open_trades": 12,
+      "total_signals": 14,
+      "open_trades": 13,
       "closed_trades": 1,
       "wins": 1,
       "losses": 0,
@@ -180,10 +180,17 @@
       "best_trade": 709.0,
       "worst_trade": 709.0,
       "net_dollars": 20.005643340858118,
-      "last_signal_ts": "2026-06-28T00:35:38.782756+00:00",
+      "last_signal_ts": "2026-06-29T00:00:26.973542+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "CIPH_1782691226973",
+          "direction": "sell",
+          "entry": 59402.1,
+          "sl": 59733.0,
+          "opened_at": "2026-06-29T00:00:27.595503+00:00"
+        },
         {
           "trade_id": "CIPH_1782606938782",
           "direction": "sell",
@@ -211,13 +218,6 @@
           "entry": 60018.3,
           "sl": 59933.3,
           "opened_at": "2026-06-27T00:00:19.148284+00:00"
-        },
-        {
-          "trade_id": "CIPH_1782438025207",
-          "direction": "sell",
-          "entry": 59256.7,
-          "sl": 58983.2,
-          "opened_at": "2026-06-26T01:40:25.687780+00:00"
         }
       ],
       "last_close": {
@@ -234,8 +234,8 @@
     {
       "name": "PHANTOM",
       "symbol": "SOLUSD",
-      "total_signals": 27,
-      "open_trades": 10,
+      "total_signals": 28,
+      "open_trades": 11,
       "closed_trades": 0,
       "wins": 0,
       "losses": 0,
@@ -245,10 +245,17 @@
       "best_trade": 0.0,
       "worst_trade": 0.0,
       "net_dollars": 0.0,
-      "last_signal_ts": "2026-06-28T22:53:34.991362+00:00",
+      "last_signal_ts": "2026-06-29T00:00:40.950698+00:00",
       "last_signal_dir": null,
       "last_signal_entry": null,
       "open_list": [
+        {
+          "trade_id": "PHNTM_1782691240950",
+          "direction": "sell",
+          "entry": 71.0,
+          "sl": 71.6,
+          "opened_at": "2026-06-29T00:00:41.529029+00:00"
+        },
         {
           "trade_id": "PHNTM_1782687214991",
           "direction": "sell",
@@ -276,13 +283,6 @@
           "entry": 66.0,
           "sl": 67.2,
           "opened_at": "2026-06-26T02:13:59.301099+00:00"
-        },
-        {
-          "trade_id": "PHNTM_1782396260481",
-          "direction": "sell",
-          "entry": 65.2,
-          "sl": 66.6,
-          "opened_at": "2026-06-25T14:04:21.088276+00:00"
         }
       ],
       "strategy_label": "SOL Weighted Score",
@@ -433,6 +433,40 @@
     }
   },
   "feed": [
+    {
+      "signal_id": "PHNTM_1782691240950",
+      "status": "open",
+      "engine_hint": "PHANTOM",
+      "symbol_hint": "SOLUSD",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-29T00:00:41.529029+00:00",
+      "closed_at": "2026-06-29T00:00:41.529029+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "sell",
+      "entry": 71.0,
+      "sl": 71.6,
+      "score": 33
+    },
+    {
+      "signal_id": "CIPH_1782691226973",
+      "status": "open",
+      "engine_hint": "CIPHER",
+      "symbol_hint": "BTCUSD",
+      "outcome": null,
+      "net_pips": null,
+      "ts": "2026-06-29T00:00:27.595503+00:00",
+      "closed_at": "2026-06-29T00:00:27.595503+00:00",
+      "tp_hit": 0,
+      "sl_hit": 0,
+      "duration_min": null,
+      "direction": "sell",
+      "entry": 59402.1,
+      "sl": 59733.0,
+      "score": 4
+    },
     {
       "signal_id": "PHNTM_1782687214991",
       "status": "open",
@@ -2648,13 +2682,53 @@
     }
   ],
   "feed_totals": {
-    "total": 159,
+    "total": 161,
     "closed": 98,
-    "open": 61,
+    "open": 63,
     "first_ts": "2026-05-07T02:22:32.251392+00:00",
-    "last_ts": "2026-06-28T22:53:35.302798+00:00"
+    "last_ts": "2026-06-29T00:00:41.529029+00:00"
   },
   "open_trades": [
+    {
+      "engine": "PHANTOM",
+      "trade_id": "PHNTM_1782691240950",
+      "direction": "sell",
+      "entry": 71.0,
+      "sl": 71.6,
+      "tp1": 70.4,
+      "tp2": 70.2,
+      "tp3": 69.9,
+      "tp4": 69.9,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-29T00:00:41.529029+00:00",
+      "score": 33,
+      "strategy": "cipher",
+      "color": "#a855f7",
+      "symbol": "SOLUSD"
+    },
+    {
+      "engine": "CIPHER",
+      "trade_id": "CIPH_1782691226973",
+      "direction": "sell",
+      "entry": 59402.1,
+      "sl": 59733.0,
+      "tp1": 59071.2,
+      "tp2": 58905.8,
+      "tp3": 58740.3,
+      "tp4": 58409.4,
+      "tp1_hit": 0,
+      "tp2_hit": 0,
+      "tp3_hit": 0,
+      "tp4_hit": 0,
+      "opened_at": "2026-06-29T00:00:27.595503+00:00",
+      "score": 4,
+      "strategy": "cipher",
+      "color": "#f97316",
+      "symbol": "BTCUSD"
+    },
     {
       "engine": "PHANTOM",
       "trade_id": "PHNTM_1782687214991",
@@ -3858,18 +3932,18 @@
       "symbol": "BTCUSD",
       "color": "#f97316",
       "label": "BTC 4H SMC",
-      "last_signal_ts": "2026-06-28T00:35:38.782756+00:00",
-      "total_signals": 13,
-      "open_trades": 12
+      "last_signal_ts": "2026-06-29T00:00:26.973542+00:00",
+      "total_signals": 14,
+      "open_trades": 13
     },
     {
       "name": "PHANTOM",
       "symbol": "SOLUSD",
       "color": "#a855f7",
       "label": "SOL Weighted Score",
-      "last_signal_ts": "2026-06-28T22:53:34.991362+00:00",
-      "total_signals": 27,
-      "open_trades": 10
+      "last_signal_ts": "2026-06-29T00:00:40.950698+00:00",
+      "total_signals": 28,
+      "open_trades": 11
     },
     {
       "name": "NEXUS",
